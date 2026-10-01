@@ -1,0 +1,9 @@
+# Ambiente Python (recriar com: python -m venv venv + pip install -r requirements.txt)
+venv/
+__pycache__/
+
+# Historico de leituras e eventos (dados locais de cada maquina)
+*.db
+*.db-journal
+*.db-wal
+*.db-shm

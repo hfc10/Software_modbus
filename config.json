@@ -1,0 +1,9 @@
+{
+  "porta_serial": "COM6",
+  "baud_rate": 9600,
+  "id_escravo": 1,
+  "porta_http": 5000,
+  "intervalo_leitura_seg": 2,
+  "intervalo_gravacao_seg": 10,
+  "retencao_dias": 30
+}

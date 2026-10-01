@@ -1,0 +1,4 @@
+flask~=3.1
+pymodbus~=3.15
+pyserial~=3.5
+waitress~=3.0
