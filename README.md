@@ -15,14 +15,22 @@ Firmware do ESP32: [hfc10/ProjetoWifiSecador2026](https://github.com/hfc10/Proje
 ## O que o painel mostra
 
 - **Processo:** desenho do tubo com os dois estágios, a saturação da sílica de cada um, a
-  resistência acesa quando aquece e a ventoinha girando.
-- **Estágios:** umidade da base, estado ("aquecendo ha 4min", "ocioso ha 1h05"), aviso de
-  **ciclo pendente** e botão da resistência.
+  resistência acesa quando aquece e a ventoinha girando. A temperatura e a umidade do topo e da
+  base aparecem dentro do próprio desenho (a temperatura do topo fica laranja acima de 70 °C e
+  vermelha a partir de 85 °C).
+- **Estágios:** umidade do topo e da base com o marcador do limite do automático em cada barra
+  ("liga acima de 55%", "desliga abaixo de 8%"), estado ("aquecendo ha 4min", "ocioso ha 1h05"),
+  aviso de **ciclo pendente** e botão da resistência.
 - **Controle:** troca entre automático e manual, Ventoinha 2 e os limites de controle
   (umidade para ligar, umidade para desligar, temperatura máxima do manual), gravados no ESP.
-  No automático os botões de saída ficam bloqueados, porque o ESP é quem decide.
+  No automático (ou sem conexão) os botões de saída ficam com cadeado; tocar neles explica o
+  motivo.
+- **Comandos:** o botão mostra "Ligando..." até a leitura do ESP confirmar a mudança. Se o
+  comando falhar ou o ESP não confirmar em 8 s, aparece um aviso com o motivo. Ligar uma
+  resistência no manual pede confirmação.
 - **Sensores:** um cartão por sensor com valor atual e mini-gráfico. Clicar abre o **gráfico
-  grande** com o histórico de 1 h, 6 h, 24 h ou 7 dias.
+  grande** com o histórico de 1 h, 6 h, 24 h ou 7 dias, com linhas tracejadas nos limites que o
+  controle usa para aquele sensor (corte 85 °C / religa 70 °C no topo, limites de umidade).
 - **Alarmes:** falha de funcionamento e sílica no fim da vida útil, com aviso na tela.
 - **Ciclos da sílica:** contador de regenerações concluídas.
 - **Eventos recentes:** resistência ligou/desligou, troca de modo, mudança de limites, alarmes,
@@ -128,7 +136,8 @@ outros sistemas:
 | `POST /api/resistencia` | `{"estagio": 1, "ligar": true}` |
 | `POST /api/limites` | `{"ligar": 55, "desligar": 8, "temp": 50}` |
 
-Comandos de saída só têm efeito com o ESP em modo manual.
+Comandos de saída só têm efeito com o ESP em modo manual. Os `POST` devolvem `{"ok": true}`,
+ou HTTP 502 com `{"erro": "..."}` quando o ESP recusa o comando ou não responde.
 
 ---
 

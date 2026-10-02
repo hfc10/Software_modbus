@@ -760,9 +760,22 @@ def loop_simulacao():
 def escrever_coil(registrador, ligar):
     if SIMULAR:
         simulador.comando_coil(registrador, ligar)
-    else:
-        with trava_modbus:
-            cliente.write_coil(registrador, ligar, device_id=ID_ESCRAVO)
+        return
+    with trava_modbus:
+        r = cliente.write_coil(registrador, ligar, device_id=ID_ESCRAVO)
+    if r.isError():
+        raise RuntimeError(f"o ESP32 recusou o comando ({r})")
+
+
+def executar_comando(funcao, *args):
+    """Roda uma escrita no ESP e devolve a resposta HTTP: o painel mostra o motivo se falhar
+    (porta serial fechada, ESP sem resposta, comando recusado)."""
+    try:
+        funcao(*args)
+    except Exception as erro:
+        print(f"Erro ao enviar comando: {erro}")
+        return jsonify({"erro": str(erro) or "sem resposta do ESP32"}), 502
+    return jsonify({"ok": True})
 
 
 # ==============================================================================
@@ -783,18 +796,15 @@ def api_dados():
 def api_ventoinha():
     ligar = bool(request.json.get("ligar", False))
     reg = REG_COIL_VENTOINHA2 if request.json.get("id") == 2 else REG_COIL_VENTOINHA
-    escrever_coil(reg, ligar)
-    return jsonify({"ok": True})
+    return executar_comando(escrever_coil, reg, ligar)
 
 
 @app.route("/api/modo", methods=["POST"])
 def api_modo():
     manual = bool(request.json.get("manual", False))
     if SIMULAR:
-        simulador.comando_modo(manual)
-    else:
-        escrever_coil(REG_COIL_MODO_MANUAL, manual)
-    return jsonify({"ok": True})
+        return executar_comando(simulador.comando_modo, manual)
+    return executar_comando(escrever_coil, REG_COIL_MODO_MANUAL, manual)
 
 
 @app.route("/api/limites", methods=["POST"])
@@ -810,20 +820,24 @@ def api_limites():
     if not (0 <= desligar < ligar <= 100 and 0 <= temp <= 125):
         return jsonify({"erro": "umidade entre 0 e 100 (desligar menor que ligar) e temp entre 0 e 125"}), 400
 
-    if SIMULAR:
-        simulador.comando_limite(REG_LIMITE_LIGAR, ligar)
-        simulador.comando_limite(REG_LIMITE_DESLIGAR, desligar)
-        simulador.comando_limite(REG_TEMP_MAXIMA_MANUAL, temp)
-    else:
+    def gravar():
+        if SIMULAR:
+            simulador.comando_limite(REG_LIMITE_LIGAR, ligar)
+            simulador.comando_limite(REG_LIMITE_DESLIGAR, desligar)
+            simulador.comando_limite(REG_TEMP_MAXIMA_MANUAL, temp)
+            return
         # Os 3 registradores vao num unico quadro (2, 3 e 4 sao consecutivos): o firmware valida
         # o conjunto, e escrever um por vez poderia ser recusado no meio do caminho.
         with trava_modbus:
-            cliente.write_registers(
+            r = cliente.write_registers(
                 REG_LIMITE_LIGAR,
                 [int(round(ligar * 10)), int(round(desligar * 10)), int(round(temp * 10))],
                 device_id=ID_ESCRAVO,
             )
-    return jsonify({"ok": True})
+        if r.isError():
+            raise RuntimeError(f"o ESP32 recusou os limites ({r})")
+
+    return executar_comando(gravar)
 
 
 @app.route("/api/resistencia", methods=["POST"])
@@ -831,8 +845,7 @@ def api_resistencia():
     estagio = request.json.get("estagio")
     ligar = bool(request.json.get("ligar", False))
     reg = REG_COIL_RESISTENCIA_E1 if estagio == 1 else REG_COIL_RESISTENCIA_E2
-    escrever_coil(reg, ligar)
-    return jsonify({"ok": True})
+    return executar_comando(escrever_coil, reg, ligar)
 
 
 @app.route("/api/historico")

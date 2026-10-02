@@ -82,6 +82,13 @@
   }
   .legenda-cor span { display: inline-flex; align-items: center; gap: 7px; }
   .legenda-cor i { width: 13px; height: 13px; border-radius: 4px; display: inline-block; }
+  /* etiquetas de leitura ao vivo dentro do desenho */
+  .etiqueta-svg rect { fill: var(--panel); fill-opacity: .82; stroke: var(--line); stroke-width: 1; }
+  .etiqueta-svg text { font-family: var(--font-mono); font-size: 12px; font-weight: 600; fill: var(--ink); }
+  .etiqueta-svg .etq-nome { font-family: var(--font-body); font-size: 9px; font-weight: 700; letter-spacing: .6px; fill: var(--ink-dim); }
+  .etiqueta-svg .etq-quente { fill: var(--accent); }
+  .etiqueta-svg .etq-corte { fill: var(--danger); }
+  .etiqueta-svg .etq-off { font-family: var(--font-body); font-style: italic; font-weight: 400; fill: var(--ink-dim); }
 
   .estagios-linha { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
   @media (max-width: 520px) { .estagios-linha { grid-template-columns: 1fr; } }
@@ -101,8 +108,19 @@
   .estado-chip.aquecendo { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
   .barra-saturacao { height: 7px; border-radius: 999px; background: var(--panel); border: 1px solid var(--line); overflow: hidden; }
   .barra-saturacao > i { display: block; height: 100%; border-radius: 999px; transition: width 1.1s ease, background 1.1s ease; }
-  .estagio-card .valores { display: flex; justify-content: space-between; margin-top: 8px; font-size: 12px; color: var(--ink-dim); }
-  .estagio-card .valores b { color: var(--ink); font-family: var(--font-mono); font-weight: 600; }
+  /* umidade do topo e da base de cada estagio, com o marcador do limite do automatico */
+  .medida + .medida { margin-top: 10px; }
+  .medida-cab { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 12px; color: var(--ink-dim); }
+  .medida-cab b { color: var(--ink); font-family: var(--font-mono); font-weight: 600; }
+  .trilho-limite { position: relative; }
+  .marca-limite {
+    position: absolute; top: -3px; width: 3px; height: 13px; border-radius: 2px;
+    background: var(--ink); box-shadow: 0 0 0 2px var(--panel-2); transform: translateX(-50%);
+    transition: left .6s ease;
+  }
+  .medida-nota { font-size: 11px; color: var(--ink-dim); margin-top: 4px; min-height: 1em; }
+  .medida-nota.alerta { color: var(--accent); }
+  .medida-nota.ok { color: var(--accent-2); }
   .toggle-botao.mini {
     margin-top: 10px; width: 100%; justify-content: center; font-size: 11.5px; padding: 6px 10px;
   }
@@ -151,6 +169,20 @@
   .toggle-botao.ligado .ponto { background: var(--accent-2); }
   .toggle-botao:disabled { opacity: .45; cursor: not-allowed; }
 
+  /* comando enviado, esperando a leitura do ESP confirmar: o ponto vira um indicador girando */
+  .toggle-botao.enviando, .toggle-modo.enviando { cursor: progress; }
+  .toggle-botao.enviando .ponto, .toggle-modo.enviando .ponto {
+    display: inline-block; flex: none; width: 11px; height: 11px; background: none; box-shadow: none;
+    border: 2px solid currentColor; border-right-color: transparent; animation: girar .8s linear infinite;
+  }
+  /* bloqueado (automatico ou sem conexao): continua clicavel pra explicar o motivo */
+  .toggle-botao.bloqueado, .toggle-modo.bloqueado { opacity: .5; cursor: not-allowed; }
+  .toggle-botao.bloqueado::after, .toggle-modo.bloqueado::after {
+    content: ''; flex: none; width: 12px; height: 12px; background: currentColor;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M5 7V5a3 3 0 0 1 6 0v2h.5A1.5 1.5 0 0 1 13 8.5v5a1.5 1.5 0 0 1-1.5 1.5h-7A1.5 1.5 0 0 1 3 13.5v-5A1.5 1.5 0 0 1 4.5 7H5zm1.5 0h3V5a1.5 1.5 0 0 0-3 0v2z'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M5 7V5a3 3 0 0 1 6 0v2h.5A1.5 1.5 0 0 1 13 8.5v5a1.5 1.5 0 0 1-1.5 1.5h-7A1.5 1.5 0 0 1 3 13.5v-5A1.5 1.5 0 0 1 4.5 7H5zm1.5 0h3V5a1.5 1.5 0 0 0-3 0v2z'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
+
   /* ---------- controle: modo, ventoinha 2, limites ---------- */
   .controle-linha { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
   .controle-linha:last-of-type { margin-bottom: 0; }
@@ -161,6 +193,7 @@
     padding: 8px 14px; border-radius: 9px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
   }
   .toggle-modo.manual { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); background: color-mix(in srgb, var(--accent) 14%, var(--panel-2)); }
+  .toggle-modo .ponto { display: none; border-radius: 50%; }
   .aviso-automatico { font-size: 11.5px; color: var(--ink-dim); margin-top: 2px; }
   .ciclo-pendente-chip {
     display: inline-flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 700;
@@ -351,6 +384,18 @@
   body.toque .banner-corpo { font-size: 14.5px; }
   .toast .toast-titulo { font-weight: 700; color: var(--danger); }
   .toast .toast-corpo { color: var(--ink-dim); font-size: 12px; margin-top: 2px; }
+  .toast.bloqueio { background: var(--panel-2); border-color: var(--ink-dim); }
+  .toast.bloqueio .toast-titulo { color: var(--ink); }
+  body.toque .toast { font-size: 15px; }
+  body.toque .toast .toast-corpo { font-size: 14px; }
+
+  /* confirmacao antes de comandos sensiveis (ligar resistencia no manual) */
+  .caixa-confirmar { width: min(440px, 100%); }
+  .caixa-confirmar h2 { margin: 0 0 8px; font-family: var(--font-display); font-size: 19px; }
+  .caixa-confirmar p { margin: 0; color: var(--ink-dim); font-size: 13.5px; line-height: 1.5; }
+  .confirmar-botoes { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+  body.toque .caixa-confirmar h2 { font-size: 23px; }
+  body.toque .caixa-confirmar p { font-size: 16px; }
   @keyframes entraToast { from { transform: translateX(24px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
   @keyframes saiToast { to { transform: translateX(24px); opacity: 0; } }
   .ferramenta-botao {
@@ -369,7 +414,9 @@
   body.toque .toggle-botao.mini { font-size: 15px; padding: 14px 10px; min-height: 52px; }
   body.toque .estagio-card .nome { font-size: 16px; }
   body.toque .estado-chip { font-size: 12.5px; padding: 5px 12px; }
-  body.toque .estagio-card .valores { font-size: 14px; }
+  body.toque .medida-cab { font-size: 14px; }
+  body.toque .medida-nota { font-size: 13px; }
+  body.toque .processo svg { max-width: 360px; }
   body.toque .tile-grande .rotulo { font-size: 13px; }
   body.toque .tile-grande .valor { font-size: 38px; }
   body.toque .tile-grande .nota { font-size: 13px; }
@@ -416,6 +463,17 @@
       <div class="tooltip-grafico" id="tooltipGrafico" hidden></div>
     </div>
     <div class="modal-resumo" id="modalResumo"></div>
+  </div>
+</div>
+
+<div class="modal" id="modalConfirmar" hidden>
+  <div class="modal-caixa caixa-confirmar" role="alertdialog" aria-modal="true" aria-labelledby="confirmarTitulo" aria-describedby="confirmarTexto">
+    <h2 id="confirmarTitulo">--</h2>
+    <p id="confirmarTexto"></p>
+    <div class="confirmar-botoes">
+      <button class="ferramenta-botao" id="confirmarCancelar" type="button">Cancelar</button>
+      <button class="botao-salvar" id="confirmarOk" type="button">Confirmar</button>
+    </div>
   </div>
 </div>
 <div class="wrap">
@@ -483,6 +541,23 @@
 
             <ellipse cx="150" cy="406" rx="75" ry="14" fill="var(--panel-2)" stroke="var(--line)" stroke-width="2"/>
 
+            <g class="etiqueta-svg">
+              <rect x="82" y="26" width="136" height="22" rx="6"/>
+              <text x="150" y="41" text-anchor="middle"><tspan class="etq-nome">TOPO</tspan><tspan id="svgE2TopoT" dx="6">--</tspan><tspan id="svgE2TopoU" dx="5"></tspan></text>
+            </g>
+            <g class="etiqueta-svg">
+              <rect x="82" y="136" width="136" height="22" rx="6"/>
+              <text x="150" y="151" text-anchor="middle"><tspan class="etq-nome">BASE</tspan><tspan id="svgE2BaseT" dx="6">--</tspan><tspan id="svgE2BaseU" dx="5"></tspan></text>
+            </g>
+            <g class="etiqueta-svg">
+              <rect x="82" y="226" width="136" height="22" rx="6"/>
+              <text x="150" y="241" text-anchor="middle"><tspan class="etq-nome">TOPO</tspan><tspan id="svgE1TopoT" dx="6">--</tspan><tspan id="svgE1TopoU" dx="5"></tspan></text>
+            </g>
+            <g class="etiqueta-svg">
+              <rect x="82" y="354" width="136" height="22" rx="6"/>
+              <text x="150" y="369" text-anchor="middle"><tspan class="etq-nome">BASE</tspan><tspan id="svgE1BaseT" dx="6">--</tspan><tspan id="svgE1BaseU" dx="5"></tspan></text>
+            </g>
+
             <text x="150" y="102" text-anchor="middle" font-family="IBM Plex Sans" font-size="15" font-weight="700" fill="var(--ink)">Estagio 2</text>
             <text x="150" y="301" text-anchor="middle" font-family="IBM Plex Sans" font-size="15" font-weight="700" fill="var(--ink)">Estagio 1</text>
           </svg>
@@ -495,15 +570,43 @@
         <div class="estagios-linha">
           <div class="estagio-card">
             <div class="cabecalho"><span class="nome">Estagio 1</span><span class="chips"><span class="estado-chip" id="chipE1">--</span><span class="ciclo-pendente-chip" id="pendenteE1" hidden>ciclo pendente</span></span></div>
-            <div class="barra-saturacao"><i id="barraE1" style="width:0%;background:var(--silica-dry)"></i></div>
-            <div class="valores"><span>Umidade na base</span><b id="valorSatE1" class="num">--%</b></div>
-            <button class="toggle-botao mini" id="botaoResistE1"><span class="ponto"></span><span id="textoResistE1">--</span></button>
+            <div class="medida">
+              <div class="medida-cab"><span>Umidade topo</span><b id="valorSatTopoE1" class="num">--%</b></div>
+              <div class="trilho-limite">
+                <div class="barra-saturacao"><i id="barraTopoE1" style="width:0%;background:var(--silica-dry)"></i></div>
+                <span class="marca-limite" id="marcaTopoE1" hidden></span>
+              </div>
+              <div class="medida-nota" id="notaTopoE1"></div>
+            </div>
+            <div class="medida">
+              <div class="medida-cab"><span>Umidade base</span><b id="valorSatBaseE1" class="num">--%</b></div>
+              <div class="trilho-limite">
+                <div class="barra-saturacao"><i id="barraBaseE1" style="width:0%;background:var(--silica-dry)"></i></div>
+                <span class="marca-limite" id="marcaBaseE1" hidden></span>
+              </div>
+              <div class="medida-nota" id="notaBaseE1"></div>
+            </div>
+            <button class="toggle-botao mini" id="botaoResistE1" type="button"><span class="ponto"></span><span class="rotulo-botao">--</span></button>
           </div>
           <div class="estagio-card">
             <div class="cabecalho"><span class="nome">Estagio 2</span><span class="chips"><span class="estado-chip" id="chipE2">--</span><span class="ciclo-pendente-chip" id="pendenteE2" hidden>ciclo pendente</span></span></div>
-            <div class="barra-saturacao"><i id="barraE2" style="width:0%;background:var(--silica-dry)"></i></div>
-            <div class="valores"><span>Umidade na base</span><b id="valorSatE2" class="num">--%</b></div>
-            <button class="toggle-botao mini" id="botaoResistE2"><span class="ponto"></span><span id="textoResistE2">--</span></button>
+            <div class="medida">
+              <div class="medida-cab"><span>Umidade topo</span><b id="valorSatTopoE2" class="num">--%</b></div>
+              <div class="trilho-limite">
+                <div class="barra-saturacao"><i id="barraTopoE2" style="width:0%;background:var(--silica-dry)"></i></div>
+                <span class="marca-limite" id="marcaTopoE2" hidden></span>
+              </div>
+              <div class="medida-nota" id="notaTopoE2"></div>
+            </div>
+            <div class="medida">
+              <div class="medida-cab"><span>Umidade base</span><b id="valorSatBaseE2" class="num">--%</b></div>
+              <div class="trilho-limite">
+                <div class="barra-saturacao"><i id="barraBaseE2" style="width:0%;background:var(--silica-dry)"></i></div>
+                <span class="marca-limite" id="marcaBaseE2" hidden></span>
+              </div>
+              <div class="medida-nota" id="notaBaseE2"></div>
+            </div>
+            <button class="toggle-botao mini" id="botaoResistE2" type="button"><span class="ponto"></span><span class="rotulo-botao">--</span></button>
           </div>
         </div>
       </div>
@@ -515,11 +618,11 @@
             <span class="controle-rotulo">Modo de operacao</span>
             <div class="aviso-automatico" id="avisoModo">No automatico o ESP decide sozinho; os botoes abaixo ficam bloqueados.</div>
           </div>
-          <button class="toggle-modo" id="botaoModo" type="button">--</button>
+          <button class="toggle-modo" id="botaoModo" type="button"><span class="ponto"></span><span class="rotulo-botao">--</span></button>
         </div>
         <div class="controle-linha">
           <span class="controle-rotulo">Ventoinha 2 (TRIAC 4, teste)</span>
-          <button class="toggle-botao" id="botaoVentoinha2"><span class="ponto"></span><span id="textoVentoinha2">--</span></button>
+          <button class="toggle-botao" id="botaoVentoinha2" type="button"><span class="ponto"></span><span class="rotulo-botao">--</span></button>
         </div>
       </div>
 
@@ -593,7 +696,7 @@
           </div>
           <div class="tile-grande">
             <span class="rotulo">Ventoinha</span>
-            <button class="toggle-botao" id="botaoVentoinha"><span class="ponto"></span><span id="textoVentoinha">--</span></button>
+            <button class="toggle-botao" id="botaoVentoinha" type="button"><span class="ponto"></span><span class="rotulo-botao">--</span></button>
           </div>
         </div>
       </div>
@@ -707,36 +810,77 @@
     return Math.floor(seg / 3600) + 'h' + String(Math.floor(seg % 3600 / 60)).padStart(2, '0');
   }
 
-  function aplicarEstagio(prefixo, sensorBase, retFillId, alturaMax, baseY, aquecendo, desdeSeg) {
+  function formatarLimite(v) { return String(Math.round(v * 10) / 10); }
+
+  // Barra de umidade de um ponto do estagio (sufixo 'TopoE1', 'BaseE2'...) com o marcador do
+  // limite do automatico que vale pra ele. Devolve a umidade em % (ou null sem leitura).
+  function aplicarMedida(sufixo, sensor, limite, textoLimite, classeNota) {
+    var barra = document.getElementById('barra' + sufixo);
+    var marca = document.getElementById('marca' + sufixo);
+    var nota = document.getElementById('nota' + sufixo);
+    var ok = !!(sensor && sensor.ok);
+    var pct = ok ? Math.max(0, Math.min(100, sensor.valor2)) : 0;
+
+    barra.style.width = pct.toFixed(0) + '%';
+    barra.style.background = corSaturacao(pct);
+    if (ok) animarValor('valorSat' + sufixo, pct, function (v) { return v.toFixed(0) + '%'; });
+    else document.getElementById('valorSat' + sufixo).textContent = '--%';
+
+    marca.hidden = limite == null;
+    if (limite != null) marca.style.left = Math.max(0, Math.min(100, limite)) + '%';
+    nota.textContent = limite == null ? '' : textoLimite + ' ' + formatarLimite(limite) + '%';
+    nota.className = 'medida-nota' + (ok && limite != null ? ' ' + classeNota(pct, limite) : '');
+    return ok ? pct : null;
+  }
+
+  // Leitura ao vivo dentro do desenho do processo; a temperatura do topo usa as mesmas faixas do
+  // termometro dos cartoes (religa abaixo de 70, corte acima de 85).
+  function aplicarEtiquetaSvg(id, sensor, ehTopo) {
+    var temp = document.getElementById(id + 'T');
+    var umid = document.getElementById(id + 'U');
+    if (!sensor || !sensor.ok) {
+      temp.textContent = 'sem leitura';
+      temp.setAttribute('class', 'etq-off');
+      umid.textContent = '';
+      return;
+    }
+    var classe = '';
+    if (ehTopo && sensor.valor1 >= TEMP_DESLIGAR) classe = 'etq-corte';
+    else if (ehTopo && sensor.valor1 >= TEMP_RELIGAR) classe = 'etq-quente';
+    temp.textContent = sensor.valor1.toFixed(1) + '°C';
+    temp.setAttribute('class', classe);
+    umid.textContent = '· ' + sensor.valor2.toFixed(0) + '%';
+  }
+
+  function aplicarEstagio(prefixo, sensorTopo, sensorBase, retFillId, alturaMax, baseY, aquecendo, desdeSeg) {
+    var lim = limitesAtuais;
+    aplicarMedida('Topo' + prefixo, sensorTopo, lim && lim.ligar, 'liga acima de',
+      function (pct, limite) { return pct > limite ? 'alerta' : ''; });
+    var satPct = aplicarMedida('Base' + prefixo, sensorBase, lim && lim.desligar, 'desliga abaixo de',
+      function (pct, limite) { return pct < limite ? 'ok' : ''; });
+    aplicarEtiquetaSvg('svg' + prefixo + 'Topo', sensorTopo, true);
+    aplicarEtiquetaSvg('svg' + prefixo + 'Base', sensorBase, false);
+
     var chip = document.getElementById('chip' + prefixo);
-    var barra = document.getElementById('barra' + prefixo);
-    var valorEl = document.getElementById('valorSat' + prefixo);
     var fillEl = document.getElementById(retFillId);
 
-    if (!sensorBase || !sensorBase.ok) {
+    if (satPct == null) {
       chip.textContent = 'sem leitura';
       chip.className = 'estado-chip erro';
-      valorEl.textContent = '--%';
-      barra.style.width = '0%';
       fillEl.setAttribute('height', 0);
       fillEl.setAttribute('y', baseY);
       return;
     }
 
-    var satPct = Math.max(0, Math.min(100, sensorBase.valor2));
-    var cor = corSaturacao(satPct);
     chip.textContent = (aquecendo ? 'aquecendo' : 'ocioso') +
       (desdeSeg != null ? ' ha ' + formatarDuracao(desdeSeg) : '');
     chip.title = aquecendo ? 'Tempo desde que a resistencia ligou' : 'Tempo desde que a resistencia desligou';
     chip.className = 'estado-chip' + (aquecendo ? ' aquecendo' : '');
-    barra.style.width = satPct.toFixed(0) + '%';
-    barra.style.background = cor;
-    animarValor(valorEl.id, satPct, function (v) { return v.toFixed(0) + '%'; });
 
     var alturaFill = (satPct / 100) * alturaMax;
     fillEl.setAttribute('y', baseY - alturaFill);
     fillEl.setAttribute('height', alturaFill);
-    fillEl.setAttribute('fill', cor);
+    fillEl.setAttribute('fill', corSaturacao(satPct));
   }
 
   var ultimosValores = {};
@@ -762,25 +906,30 @@
     return null;
   }
 
-  function mostrarToast(titulo, corpo) {
+  // tipo: omitido = alerta (vermelho); 'bloqueio' = explica por que um botao esta travado
+  function mostrarToast(titulo, corpo, tipo) {
     var lista = document.getElementById('toastLista');
+    // tocar varias vezes no mesmo botao nao empilha avisos iguais
+    Array.prototype.forEach.call(lista.children, function (t) {
+      if (t.dataset.titulo === titulo) t.remove();
+    });
     var toast = document.createElement('div');
-    toast.className = 'toast';
-    toast.innerHTML = '<span class="toast-icone">&#9888;&#65039;</span>' +
-      '<div><div class="toast-titulo">' + titulo + '</div><div class="toast-corpo">' + corpo + '</div></div>';
+    toast.className = 'toast' + (tipo ? ' ' + tipo : '');
+    toast.dataset.titulo = titulo;
+    toast.innerHTML = '<span class="toast-icone">' + (tipo === 'bloqueio' ? '&#128274;' : '&#9888;&#65039;') + '</span>' +
+      '<div><div class="toast-titulo">' + escapar(titulo) + '</div><div class="toast-corpo">' + escapar(corpo) + '</div></div>';
     lista.appendChild(toast);
     setTimeout(function () { toast.remove(); }, 5000);
   }
 
-  var ventoinhaAtual = false;
-  var ventoinha2Atual = false;
-  var modoManualAtual = false;
-  var resistenciaAtual = { E1: false, E2: false };
+  var ultimosDados = null;
+  var limitesAtuais = null;  // so preenchido depois que o ESP mandou limites validos
   var ultimoConectado = null;
   var ultimoAlarmeFalha = null;
   var ultimoAlarmeSaturacao = null;
 
   function renderizar(d) {
+    ultimosDados = d;
     var pillConexao = document.getElementById('pillConexao');
     pillConexao.className = 'pill ' + (d.conectado ? 'ok' : 'erro');
     document.getElementById('pillConexaoTxt').textContent = d.conectado
@@ -806,13 +955,16 @@
     ultimoConectado = d.conectado;
 
     var sensores = d.sensores || [];
-    var e1Base = acharSensor(sensores, 'E1-Base');
-    var e2Base = acharSensor(sensores, 'E2-Base');
     var ambiente = acharSensor(sensores, 'BMP180');
 
+    // antes da primeira leitura do ESP os limites chegam zerados: sem marcadores ate la
+    limitesAtuais = d.limites && d.limites.ligar > d.limites.desligar ? d.limites : null;
+
     var desde = d.desdeSeg || [null, null];
-    aplicarEstagio('E1', e1Base, 'fillE1', 201, 406, !!d.resistenciaE1, desde[0]);
-    aplicarEstagio('E2', e2Base, 'fillE2', 179, 195, !!d.resistenciaE2, desde[1]);
+    aplicarEstagio('E1', acharSensor(sensores, 'E1-Topo'), acharSensor(sensores, 'E1-Base'),
+      'fillE1', 201, 406, !!d.resistenciaE1, desde[0]);
+    aplicarEstagio('E2', acharSensor(sensores, 'E2-Topo'), acharSensor(sensores, 'E2-Base'),
+      'fillE2', 179, 195, !!d.resistenciaE2, desde[1]);
 
     var vent = document.getElementById('grupoVentoinha');
     vent.style.animation = d.ventoinha ? 'girar 1.1s linear infinite' : 'none';
@@ -823,43 +975,21 @@
       el.style.animation = d.ventoinha ? 'fluirAr 0.8s linear infinite' : 'none';
     });
 
-    ventoinhaAtual = !!d.ventoinha;
-    var botao = document.getElementById('botaoVentoinha');
-    botao.classList.toggle('ligado', ventoinhaAtual);
-    document.getElementById('textoVentoinha').textContent = ventoinhaAtual ? 'Ligada' : 'Desligada';
-
-    resistenciaAtual.E1 = !!d.resistenciaE1;
-    resistenciaAtual.E2 = !!d.resistenciaE2;
-    modoManualAtual = !!d.modoManual;
-    ['E1', 'E2'].forEach(function (prefixo) {
-      var botaoResist = document.getElementById('botaoResist' + prefixo);
-      botaoResist.classList.toggle('ligado', resistenciaAtual[prefixo]);
-      botaoResist.disabled = !modoManualAtual;
-      document.getElementById('textoResist' + prefixo).textContent =
-        resistenciaAtual[prefixo] ? 'Resistencia ligada' : 'Resistencia desligada';
-      var brasa = document.getElementById('brasa' + prefixo);
-      brasa.classList.toggle('ligada', resistenciaAtual[prefixo]);
-      brasa.setAttribute('fill', resistenciaAtual[prefixo] ? 'var(--accent)' : 'var(--line)');
+    [['E1', !!d.resistenciaE1], ['E2', !!d.resistenciaE2]].forEach(function (par) {
+      var brasa = document.getElementById('brasa' + par[0]);
+      brasa.classList.toggle('ligada', par[1]);
+      brasa.setAttribute('fill', par[1] ? 'var(--accent)' : 'var(--line)');
     });
 
-    var pendentes = d.cicloIncompleto || [false, false];
-    document.getElementById('pendenteE1').hidden = !pendentes[0];
-    document.getElementById('pendenteE2').hidden = !pendentes[1];
+    var ciclosPendentes = d.cicloIncompleto || [false, false];
+    document.getElementById('pendenteE1').hidden = !ciclosPendentes[0];
+    document.getElementById('pendenteE2').hidden = !ciclosPendentes[1];
 
-    // ---------- modo, ventoinha 2, limites ----------
-    var botaoModo = document.getElementById('botaoModo');
-    botaoModo.classList.toggle('manual', modoManualAtual);
-    botaoModo.textContent = modoManualAtual ? 'Manual' : 'Automatico';
-    document.getElementById('avisoModo').textContent = modoManualAtual
+    // ---------- modo, ventoinhas, resistencias, limites ----------
+    renderizarBotoes(d);
+    document.getElementById('avisoModo').textContent = d.modoManual
       ? 'Manual: os botoes de resistencia, ventoinha 1 e ventoinha 2 comandam as saidas direto.'
       : 'No automatico o ESP decide sozinho; os botoes abaixo ficam bloqueados.';
-    document.getElementById('botaoVentoinha').disabled = !modoManualAtual;
-
-    ventoinha2Atual = !!d.ventoinha2;
-    var botaoV2 = document.getElementById('botaoVentoinha2');
-    botaoV2.classList.toggle('ligado', ventoinha2Atual);
-    botaoV2.disabled = !modoManualAtual;
-    document.getElementById('textoVentoinha2').textContent = ventoinha2Atual ? 'Ligada' : 'Desligada';
 
     if (d.limites) {
       // nao sobrescreve um campo enquanto o operador esta digitando nele
@@ -914,7 +1044,7 @@
     document.getElementById('resumoEstadoTxt').textContent = emAtencao ? 'Atencao necessaria' : 'Normal';
     document.getElementById('resumoCiclosRestantes').textContent = Math.max(0, 5000 - ciclos);
     document.getElementById('resumoEstagioAtivo').textContent =
-      resistenciaAtual.E1 ? 'Estagio 1' : (resistenciaAtual.E2 ? 'Estagio 2' : 'Nenhum');
+      d.resistenciaE1 ? 'Estagio 1' : (d.resistenciaE2 ? 'Estagio 2' : 'Nenhum');
 
     renderizarEventos(d.eventos || []);
 
@@ -966,52 +1096,129 @@
     }
   }
 
-  document.getElementById('botaoVentoinha').addEventListener('click', async function () {
+  // ---------- comandos: botao "enviando" ate a leitura do ESP confirmar, bloqueio com motivo ----------
+  var COMANDOS = {
+    botaoVentoinha: { rotulo: 'Ventoinha 1', url: '/api/ventoinha', textos: ['Ligada', 'Desligada'],
+      corpo: function (ligar) { return { ligar: ligar }; } },
+    botaoVentoinha2: { rotulo: 'Ventoinha 2', url: '/api/ventoinha', textos: ['Ligada', 'Desligada'],
+      corpo: function (ligar) { return { ligar: ligar, id: 2 }; } },
+    botaoResistE1: { rotulo: 'Resistencia do Estagio 1', url: '/api/resistencia', estagio: 1,
+      textos: ['Resistencia ligada', 'Resistencia desligada'],
+      corpo: function (ligar) { return { estagio: 1, ligar: ligar }; } },
+    botaoResistE2: { rotulo: 'Resistencia do Estagio 2', url: '/api/resistencia', estagio: 2,
+      textos: ['Resistencia ligada', 'Resistencia desligada'],
+      corpo: function (ligar) { return { estagio: 2, ligar: ligar }; } },
+    botaoModo: { rotulo: 'Modo de operacao', url: '/api/modo', textos: ['Manual', 'Automatico'], enviando: 'Mudando...',
+      corpo: function (manual) { return { manual: manual }; } },
+  };
+  var ESPERA_CONFIRMACAO_MS = 8000;  // leitura a cada 2 s: sobra folga pra porta serial lenta
+  var estadoSaidas = {};  // id do botao -> ligado na ultima leitura
+  var pendentes = {};     // id do botao -> { esperado, ate } enquanto o ESP nao confirma
+
+  function atualizarBotao(id, ligado, motivoBloqueio) {
+    var cmd = COMANDOS[id];
+    var botao = document.getElementById(id);
+    var p = pendentes[id];
+    if (p && (ligado === p.esperado || Date.now() > p.ate)) {
+      if (ligado !== p.esperado) {
+        mostrarToast(cmd.rotulo + ': sem confirmacao',
+          'O pedido chegou, mas a saida nao mudou na leitura do ESP32. Confira o modo e a conexao.');
+      }
+      delete pendentes[id];
+      p = null;
+    }
+    estadoSaidas[id] = ligado;
+    var bloqueio = p ? '' : (motivoBloqueio || '');
+    botao.classList.toggle('ligado', ligado);
+    botao.classList.toggle('enviando', !!p);
+    botao.classList.toggle('bloqueado', !!bloqueio);
+    botao.setAttribute('aria-disabled', p || bloqueio ? 'true' : 'false');
+    botao.dataset.motivo = bloqueio;
+    botao.title = bloqueio;
+    botao.querySelector('.rotulo-botao').textContent = p
+      ? (cmd.enviando || (p.esperado ? 'Ligando...' : 'Desligando...'))
+      : cmd.textos[ligado ? 0 : 1];
+  }
+
+  function renderizarBotoes(d) {
+    var semConexao = d.conectado ? '' : 'Sem resposta do ESP32: o comando nao chegaria. Confira o cabo RS-485.';
+    var noAutomatico = semConexao || (d.modoManual ? '' :
+      'No modo automatico o ESP decide sozinho. Troque para Manual no painel "Controle" para comandar as saidas.');
+    atualizarBotao('botaoVentoinha', !!d.ventoinha, noAutomatico);
+    atualizarBotao('botaoVentoinha2', !!d.ventoinha2, noAutomatico);
+    atualizarBotao('botaoResistE1', !!d.resistenciaE1, noAutomatico);
+    atualizarBotao('botaoResistE2', !!d.resistenciaE2, noAutomatico);
+    atualizarBotao('botaoModo', !!d.modoManual, semConexao);
+    document.getElementById('botaoModo').classList.toggle('manual', !!d.modoManual);
+  }
+
+  async function enviarComando(id, ligar) {
+    var cmd = COMANDOS[id];
+    pendentes[id] = { esperado: ligar, ate: Date.now() + ESPERA_CONFIRMACAO_MS };
+    if (ultimosDados) renderizarBotoes(ultimosDados);
     try {
-      await fetchComTimeout('/api/ventoinha', {
+      var r = await fetchComTimeout(cmd.url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ligar: !ventoinhaAtual }),
-      }, 4000);
-      atualizar();
-    } catch (e) {}
-  });
+        body: JSON.stringify(cmd.corpo(ligar)),
+      }, 5000);
+      if (!r.ok) {
+        var resposta = await r.json().catch(function () { return {}; });
+        throw new Error(resposta.erro || 'o servidor respondeu com erro ' + r.status);
+      }
+    } catch (e) {
+      delete pendentes[id];
+      var motivo = e.name === 'AbortError' ? 'O servidor do painel nao respondeu a tempo.'
+        : (e instanceof TypeError ? 'Sem conexao com o servidor do painel.' : e.message);
+      mostrarToast(cmd.rotulo + ': comando nao enviado', motivo);
+    }
+    atualizar();
+  }
 
-  [1, 2].forEach(function (estagio) {
-    var prefixo = 'E' + estagio;
-    document.getElementById('botaoResist' + prefixo).addEventListener('click', async function () {
-      try {
-        await fetchComTimeout('/api/resistencia', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ estagio: estagio, ligar: !resistenciaAtual[prefixo] }),
-        }, 4000);
-        atualizar();
-      } catch (e) {}
+  Object.keys(COMANDOS).forEach(function (id) {
+    document.getElementById(id).addEventListener('click', async function () {
+      if (pendentes[id]) return;
+      if (this.dataset.motivo) {
+        mostrarToast('Comando bloqueado', this.dataset.motivo, 'bloqueio');
+        return;
+      }
+      var cmd = COMANDOS[id];
+      var ligar = !estadoSaidas[id];
+      if (cmd.estagio && ligar) {
+        var texto = 'No modo manual ela fica ligada ate voce desligar' +
+          (limitesAtuais ? ' ou ate atingir a temperatura maxima do manual (' + formatarLimite(limitesAtuais.temp) + ' °C)' : '') + '.' +
+          (estadoSaidas.botaoVentoinha ? '' : ' Atencao: a Ventoinha 1 esta desligada.');
+        var confirmado = await confirmar('Ligar a resistencia do Estagio ' + cmd.estagio + '?', texto, 'Ligar resistencia');
+        if (!confirmado) return;
+      }
+      enviarComando(id, ligar);
     });
   });
 
-  document.getElementById('botaoVentoinha2').addEventListener('click', async function () {
-    try {
-      await fetchComTimeout('/api/ventoinha', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ligar: !ventoinha2Atual, id: 2 }),
-      }, 4000);
-      atualizar();
-    } catch (e) {}
-  });
+  // ---------- confirmacao ----------
+  var modalConfirmar = document.getElementById('modalConfirmar');
+  var resolverConfirmacao = null;
 
-  document.getElementById('botaoModo').addEventListener('click', async function () {
-    try {
-      await fetchComTimeout('/api/modo', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ manual: !modoManualAtual }),
-      }, 4000);
-      atualizar();
-    } catch (e) {}
-  });
+  function confirmar(titulo, texto, rotuloOk) {
+    document.getElementById('confirmarTitulo').textContent = titulo;
+    document.getElementById('confirmarTexto').textContent = texto;
+    document.getElementById('confirmarOk').textContent = rotuloOk;
+    modalConfirmar.hidden = false;
+    document.getElementById('confirmarCancelar').focus();  // o padrao e o caminho seguro
+    return new Promise(function (resolver) { resolverConfirmacao = resolver; });
+  }
+
+  function fecharConfirmacao(resposta) {
+    if (!resolverConfirmacao) return;
+    modalConfirmar.hidden = true;
+    resolverConfirmacao(resposta);
+    resolverConfirmacao = null;
+  }
+
+  document.getElementById('confirmarOk').addEventListener('click', function () { fecharConfirmacao(true); });
+  document.getElementById('confirmarCancelar').addEventListener('click', function () { fecharConfirmacao(false); });
+  modalConfirmar.addEventListener('click', function (e) { if (e.target === modalConfirmar) fecharConfirmacao(false); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') fecharConfirmacao(false); });
 
   document.getElementById('botaoSalvarLimites').addEventListener('click', async function () {
     var botao = this;
@@ -1094,6 +1301,21 @@
     return { rotulo: 'Umidade', unidade: '%', cor: '#4fa8e8' };
   }
 
+  // Linhas de referencia do grafico: o que o controle do ESP compara com esse sensor.
+  // cor = nome da variavel CSS.
+  function referenciasGrafico(dados, metrica) {
+    var topo = dados.nome.indexOf('Topo') !== -1, base = dados.nome.indexOf('Base') !== -1;
+    var refs = [];
+    if (metrica === 'v1' && topo) {
+      refs.push({ v: TEMP_DESLIGAR, rotulo: 'corte ' + TEMP_DESLIGAR + '°C', cor: '--danger' });
+      refs.push({ v: TEMP_RELIGAR, rotulo: 'religa abaixo de ' + TEMP_RELIGAR + '°C', cor: '--accent' });
+    } else if (metrica === 'v2' && limitesAtuais) {
+      if (topo) refs.push({ v: limitesAtuais.ligar, rotulo: 'liga acima de ' + formatarLimite(limitesAtuais.ligar) + '%', cor: '--accent' });
+      if (base) refs.push({ v: limitesAtuais.desligar, rotulo: 'desliga abaixo de ' + formatarLimite(limitesAtuais.desligar) + '%', cor: '--accent-2' });
+    }
+    return refs;
+  }
+
   function rotuloTempo(ts, horas) {
     var d = new Date(ts * 1000);
     var hm = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
@@ -1131,7 +1353,10 @@
     var margem = { e: 56, d: 16, t: 16, b: 30 };
     var largura = w - margem.e - margem.d, altura = h - margem.t - margem.b;
     var valores = pontos.map(function (p) { return p[grafico.metrica]; });
-    var min = Math.min.apply(null, valores), max = Math.max.apply(null, valores);
+    var refs = referenciasGrafico(dados, grafico.metrica);
+    // a escala inclui os limites: a ideia e ver o quanto a curva esta longe deles
+    var min = Math.min.apply(null, valores.concat(refs.map(function (r) { return r.v; })));
+    var max = Math.max.apply(null, valores.concat(refs.map(function (r) { return r.v; })));
     if (max - min < 0.5) { min -= 0.5; max += 0.5; }  // evita escala achatada quando quase nao varia
     var folga = (max - min) * 0.08;
     min -= folga; max += folga;
@@ -1156,6 +1381,13 @@
       ctx.fillText(rotuloTempo(ts, dados.horas), xx, h - 9);
     }
 
+    refs.forEach(function (ref) {
+      var yRef = py(ref.v);
+      ctx.strokeStyle = estilo.getPropertyValue(ref.cor).trim(); ctx.lineWidth = 1.5; ctx.setLineDash([6, 5]);
+      ctx.beginPath(); ctx.moveTo(margem.e, yRef); ctx.lineTo(w - margem.d, yRef); ctx.stroke();
+      ctx.setLineDash([]);
+    });
+
     // linhas (quebra onde ficou um buraco sem leituras) + area sob a curva
     var limiteBuraco = Math.max(dados.horas * 3600 / 240, dados.intervalo_gravacao_seg) * 3;
     var segmentos = [], atual = [];
@@ -1179,6 +1411,17 @@
         ctx.lineTo(px(seg[0].ts), margem.t + altura);
         ctx.closePath(); ctx.fillStyle = gradiente; ctx.fill();
       }
+    });
+
+    // rotulos dos limites por cima da curva: acima da linha (abaixo se colado no topo), com fundo
+    refs.forEach(function (ref) {
+      var yRef = py(ref.v);
+      var yTexto = yRef - 6 < margem.t + 10 ? yRef + 15 : yRef - 6;
+      var larguraTexto = ctx.measureText(ref.rotulo).width;
+      ctx.fillStyle = estilo.getPropertyValue('--panel-2').trim();
+      ctx.fillRect(w - margem.d - 8 - larguraTexto, yTexto - 11, larguraTexto + 8, 15);
+      ctx.fillStyle = estilo.getPropertyValue(ref.cor).trim(); ctx.textAlign = 'right';
+      ctx.fillText(ref.rotulo, w - margem.d - 4, yTexto);
     });
 
     pontos.forEach(function (p) {
