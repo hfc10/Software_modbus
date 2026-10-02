@@ -24,10 +24,11 @@ fora da tela de operação.
   alarme não reconhecido.
 - **Processo:** desenho do tubo com os dois estágios, a saturação da sílica de cada um, a
   resistência acesa quando aquece e a ventoinha girando. A temperatura e a umidade do topo e da
-  base aparecem dentro do próprio desenho (a temperatura do topo fica laranja acima de 70 °C e
-  vermelha a partir de 85 °C).
+  base aparecem dentro do próprio desenho (a temperatura do topo fica laranja acima da
+  temperatura de religamento e vermelha a partir do corte; padrão 70 °C e 85 °C, ver
+  `config.json`).
 - **Estágios:** umidade do topo e da base com o marcador do limite do automático em cada barra
-  ("liga acima de 55%", "desliga abaixo de 8%"), estado ("aquecendo ha 4min", "ocioso ha 1h05"),
+  ("liga acima de 55%", "desliga abaixo de 8%"), estado ("aquecendo há 4min", "ocioso há 1h05"),
   aviso de **ciclo pendente** e botão da resistência (Ligada/Desligada).
 - **Controle:** troca entre automático e manual e Ventoinha 2. No automático (ou sem conexão)
   os botões de saída ficam com cadeado; tocar neles explica o motivo.
@@ -111,6 +112,16 @@ Todos os campos são opcionais; o que faltar usa o padrão.
 | `intervalo_gravacao_seg` | `10` | De quanto em quanto tempo grava o histórico em disco |
 | `retencao_dias` | `30` | Quantos dias de histórico manter |
 | `pin_ajustes` | `""` | PIN numérico para ajustes e troca de modo, ex.: `"1234"` (vazio = sem PIN) |
+| `ciclos_maximos_silica` | `5000` | Limite de ciclos da sílica mostrado no anel (igual a `CICLOS_MAXIMOS_SILICA` do firmware) |
+| `temp_corte_c` | `85.0` | Temperatura do topo em que o firmware corta a resistência |
+| `temp_religa_c` | `70.0` | Temperatura do topo abaixo da qual o estágio pode religar |
+
+Os três últimos são **referências do firmware**: o painel só os usa para desenhar (anel de
+ciclos, termômetro dos cartões, cor das leituras no desenho, linhas dos gráficos). Quem decide
+o corte, o religamento e o alarme de fim de vida é o ESP32, com os valores gravados no
+firmware. Se mudar algum deles lá, mude aqui também, senão o painel mostra referências
+erradas. Valores inválidos (religamento maior ou igual ao corte, ciclos ≤ 0) são ignorados
+com aviso no console, e o padrão é usado. A simulação usa os mesmos valores.
 
 ---
 

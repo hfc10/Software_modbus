@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -609,7 +609,7 @@
     <span class="banner-icone">&#9888;&#65039;</span>
     <div class="banner-texto">
       <div class="banner-titulo">Sem resposta do ESP32 (RS-485)</div>
-      <div class="banner-corpo" id="bannerConexaoCorpo">Confira a porta serial e o cabo do adaptador USB-RS485. O secador continua funcionando sozinho - o controle mora no ESP, nao no painel.</div>
+      <div class="banner-corpo" id="bannerConexaoCorpo">Confira a porta serial e o cabo do adaptador USB-RS485. O secador continua funcionando sozinho - o controle mora no ESP, não no painel.</div>
     </div>
   </div>
 
@@ -673,18 +673,18 @@
               <text x="150" y="369" text-anchor="middle"><tspan class="etq-nome">BASE</tspan><tspan id="svgE1BaseT" dx="6">--</tspan><tspan id="svgE1BaseU" dx="5"></tspan></text>
             </g>
 
-            <text x="150" y="102" text-anchor="middle" font-family="IBM Plex Sans" font-size="15" font-weight="700" fill="var(--ink)">Estagio 2</text>
-            <text x="150" y="301" text-anchor="middle" font-family="IBM Plex Sans" font-size="15" font-weight="700" fill="var(--ink)">Estagio 1</text>
+            <text x="150" y="102" text-anchor="middle" font-family="IBM Plex Sans" font-size="15" font-weight="700" fill="var(--ink)">Estágio 2</text>
+            <text x="150" y="301" text-anchor="middle" font-family="IBM Plex Sans" font-size="15" font-weight="700" fill="var(--ink)">Estágio 1</text>
           </svg>
           <div class="legenda-cor">
-            <span><i style="background:var(--silica-dry)"></i>Silica seca</span>
-            <span><i style="background:var(--silica-wet)"></i>Silica saturada</span>
+            <span><i style="background:var(--silica-dry)"></i>Sílica seca</span>
+            <span><i style="background:var(--silica-wet)"></i>Sílica saturada</span>
           </div>
         </div>
 
         <div class="estagios-linha">
           <div class="estagio-card">
-            <div class="cabecalho"><span class="nome">Estagio 1</span><span class="chips"><span class="estado-chip" id="chipE1">--</span><span class="ciclo-pendente-chip" id="pendenteE1" hidden>ciclo pendente</span></span></div>
+            <div class="cabecalho"><span class="nome">Estágio 1</span><span class="chips"><span class="estado-chip" id="chipE1">--</span><span class="ciclo-pendente-chip" id="pendenteE1" hidden>ciclo pendente</span></span></div>
             <div class="medida">
               <div class="medida-cab"><span>Umidade topo</span><b id="valorSatTopoE1" class="num">--%</b></div>
               <div class="trilho-limite">
@@ -701,11 +701,11 @@
               </div>
               <div class="medida-nota" id="notaBaseE1"></div>
             </div>
-            <div class="medida-cab rotulo-resistencia"><span>Resistencia</span></div>
+            <div class="medida-cab rotulo-resistencia"><span>Resistência</span></div>
             <button class="toggle-botao mini" id="botaoResistE1" type="button"><span class="ponto"></span><span class="rotulo-botao">--</span></button>
           </div>
           <div class="estagio-card">
-            <div class="cabecalho"><span class="nome">Estagio 2</span><span class="chips"><span class="estado-chip" id="chipE2">--</span><span class="ciclo-pendente-chip" id="pendenteE2" hidden>ciclo pendente</span></span></div>
+            <div class="cabecalho"><span class="nome">Estágio 2</span><span class="chips"><span class="estado-chip" id="chipE2">--</span><span class="ciclo-pendente-chip" id="pendenteE2" hidden>ciclo pendente</span></span></div>
             <div class="medida">
               <div class="medida-cab"><span>Umidade topo</span><b id="valorSatTopoE2" class="num">--%</b></div>
               <div class="trilho-limite">
@@ -722,7 +722,7 @@
               </div>
               <div class="medida-nota" id="notaBaseE2"></div>
             </div>
-            <div class="medida-cab rotulo-resistencia"><span>Resistencia</span></div>
+            <div class="medida-cab rotulo-resistencia"><span>Resistência</span></div>
             <button class="toggle-botao mini" id="botaoResistE2" type="button"><span class="ponto"></span><span class="rotulo-botao">--</span></button>
           </div>
         </div>
@@ -732,8 +732,8 @@
         <div class="painel-titulo">Controle</div>
         <div class="controle-linha">
           <div>
-            <span class="controle-rotulo">Modo de operacao</span>
-            <div class="aviso-automatico" id="avisoModo">No automatico o ESP decide sozinho; os botoes abaixo ficam bloqueados.</div>
+            <span class="controle-rotulo">Modo de operação</span>
+            <div class="aviso-automatico" id="avisoModo">No automático o ESP decide sozinho; os botões abaixo ficam bloqueados.</div>
           </div>
           <button class="toggle-modo" id="botaoModo" type="button"><span class="ponto"></span><span class="rotulo-botao">--</span></button>
         </div>
@@ -749,7 +749,7 @@
       <div class="painel">
         <div class="linha-topo-direita">
           <div class="tile-grande">
-            <span class="rotulo">Ciclos de silica</span>
+            <span class="rotulo">Ciclos de sílica</span>
             <div class="anel-progresso">
               <svg viewBox="0 0 100 100">
                 <circle class="anel-fundo" cx="50" cy="50" r="42"/>
@@ -757,10 +757,10 @@
               </svg>
               <div class="anel-valor">
                 <span class="valor num" id="valorCiclos">--</span>
-                <span class="anel-unid">/ 5000</span>
+                <span class="anel-unid" id="anelMaximo">/ 5000</span>
               </div>
             </div>
-            <span class="nota" id="notaCiclos">regeneracoes desde a instalacao</span>
+            <span class="nota" id="notaCiclos">regenerações desde a instalação</span>
           </div>
           <div class="tile-grande">
             <span class="rotulo">Temperatura ambiente</span>
@@ -776,7 +776,7 @@
 
       <div class="painel">
         <div class="tendencia-topo">
-          <div class="painel-titulo">Tendencia do processo</div>
+          <div class="painel-titulo">Tendência do processo</div>
           <div class="tendencia-controles">
             <div class="seletor compacto" id="seletorTendMetrica">
               <button type="button" data-metrica="v2" class="ativo">Umidade</button>
@@ -791,7 +791,7 @@
         </div>
         <div class="legenda-tendencia" id="legendaTendencia"></div>
         <div class="grafico-tendencia">
-          <canvas id="canvasTendencia" aria-label="Grafico de tendencia do topo e da base dos dois estagios"></canvas>
+          <canvas id="canvasTendencia" aria-label="Gráfico de tendência do topo e da base dos dois estágios"></canvas>
           <div class="tooltip-grafico" id="tooltipTendencia" hidden></div>
         </div>
       </div>
@@ -817,7 +817,7 @@
           </div>
           <div class="alarme-item ok" id="alarmeSaturacao">
             <div class="faixa"></div>
-            <div class="txt"><div class="t1">Saturacao / fim de vida da silica</div><div class="t2" id="alarmeSaturacaoTxt">dentro do limite de ciclos</div></div>
+            <div class="txt"><div class="t1">Saturação / fim de vida da sílica</div><div class="t2" id="alarmeSaturacaoTxt">dentro do limite de ciclos</div></div>
             <span class="alarme-acao" id="alarmeSaturacaoAcao"></span>
           </div>
         </div>
@@ -849,8 +849,8 @@
       <button class="ferramenta-botao" id="ajustesFechar" type="button">Fechar</button>
     </div>
     <div class="ajustes-secao">
-      <h3>Limites do controle automatico</h3>
-      <p class="ajustes-texto">Gravados no ESP32. O ESP recusa valores invalidos e mantem os anteriores.</p>
+      <h3>Limites do controle automático</h3>
+      <p class="ajustes-texto">Gravados no ESP32. O ESP recusa valores inválidos e mantém os anteriores.</p>
       <div class="limites-form">
         <div class="limite-campo">
           <label for="campoLimiteLigar">Umidade topo - ligar (%)</label>
@@ -861,7 +861,7 @@
           <input type="number" id="campoLimiteDesligar" min="0" max="100" step="0.1">
         </div>
         <div class="limite-campo">
-          <label for="campoTempMaxima">Temp. maxima do manual (C)</label>
+          <label for="campoTempMaxima">Temp. máxima do manual (°C)</label>
           <input type="number" id="campoTempMaxima" min="0" max="125" step="0.1">
         </div>
       </div>
@@ -895,9 +895,19 @@
 
 <script>
 (function () {
-  // Limites de temperatura do topo, fixos no firmware (corte em 85, so religa abaixo de 70).
-  // A escala da barra vai de 20 a 100 C.
-  var TEMP_RELIGAR = 70, TEMP_DESLIGAR = 85, TEMP_ESCALA_MIN = 20, TEMP_ESCALA_MAX = 100;
+  // Referencias do firmware (corte e religamento do topo, limite de ciclos da silica). Vem do
+  // config.json via /api/dados ("referencias"); estes valores so valem ate a primeira leitura.
+  // A escala do termometro vai de 20 C ate um pouco acima do corte.
+  var TEMP_RELIGAR = 70, TEMP_DESLIGAR = 85, CICLOS_MAXIMOS = 5000, TEMP_ESCALA_MIN = 20, TEMP_ESCALA_MAX = 100;
+
+  function aplicarReferencias(ref) {
+    if (!ref) return;
+    TEMP_RELIGAR = ref.tempReliga;
+    TEMP_DESLIGAR = ref.tempCorte;
+    CICLOS_MAXIMOS = ref.ciclosMaximos;
+    TEMP_ESCALA_MAX = Math.max(100, Math.ceil((TEMP_DESLIGAR + 15) / 10) * 10);
+    document.getElementById('anelMaximo').textContent = '/ ' + CICLOS_MAXIMOS;
+  }
 
   function posicaoTemp(t) {
     var pct = (t - TEMP_ESCALA_MIN) / (TEMP_ESCALA_MAX - TEMP_ESCALA_MIN) * 100;
@@ -907,8 +917,8 @@
   function termometroHTML(temperatura) {
     var ponteiro = temperatura == null ? '' :
       '<i class="termo-ponteiro" style="left:' + posicaoTemp(temperatura).toFixed(1) + '%"></i>';
-    return '<div class="termo" title="Abaixo de ' + TEMP_RELIGAR + '&deg;C o estagio pode religar; acima de ' +
-      TEMP_DESLIGAR + '&deg;C o firmware corta a resistencia"><div class="termo-trilho">' + ponteiro + '</div>' +
+    return '<div class="termo" title="Abaixo de ' + TEMP_RELIGAR + '&deg;C o estágio pode religar; acima de ' +
+      TEMP_DESLIGAR + '&deg;C o firmware corta a resistência"><div class="termo-trilho">' + ponteiro + '</div>' +
       '<div class="termo-marcas">' +
       '<span style="left:' + posicaoTemp(TEMP_RELIGAR).toFixed(1) + '%">' + TEMP_RELIGAR + '&deg;</span>' +
       '<span style="left:' + posicaoTemp(TEMP_DESLIGAR).toFixed(1) + '%">' + TEMP_DESLIGAR + '&deg;</span>' +
@@ -1038,8 +1048,8 @@
     }
 
     chip.textContent = (aquecendo ? 'aquecendo' : 'ocioso') +
-      (desdeSeg != null ? ' ha ' + formatarDuracao(desdeSeg) : '');
-    chip.title = aquecendo ? 'Tempo desde que a resistencia ligou' : 'Tempo desde que a resistencia desligou';
+      (desdeSeg != null ? ' há ' + formatarDuracao(desdeSeg) : '');
+    chip.title = aquecendo ? 'Tempo desde que a resistência ligou' : 'Tempo desde que a resistência desligou';
     chip.className = 'estado-chip' + (aquecendo ? ' aquecendo' : '');
 
     var alturaFill = (satPct / 100) * alturaMax;
@@ -1095,10 +1105,11 @@
 
   function renderizar(d) {
     ultimosDados = d;
+    aplicarReferencias(d.referencias);
     var pillConexao = document.getElementById('pillConexao');
     pillConexao.className = 'pill ' + (d.conectado ? 'ok' : 'erro');
     document.getElementById('pillConexaoTxt').textContent = d.conectado
-      ? (d.simulacao ? 'Simulacao (sem Modbus)' : 'Conectado')
+      ? (d.simulacao ? 'Simulação (sem Modbus)' : 'Conectado')
       : 'Sem resposta do ESP32 (RS-485)';
     document.getElementById('pillAtualizadoTxt').textContent =
       d.ultimaAtualizacao ? new Date(d.ultimaAtualizacao * 1000).toLocaleTimeString() : '--';
@@ -1107,8 +1118,8 @@
     banner.hidden = !!d.conectado;
     if (!d.conectado) {
       document.getElementById('bannerConexaoCorpo').textContent = d.simulacao
-        ? 'Modo simulacao ligado (sem ESP32 de verdade nesta leitura).'
-        : 'Confira a porta serial e o cabo do adaptador USB-RS485. O secador continua funcionando sozinho - o controle mora no ESP, nao no painel.';
+        ? 'Modo simulação ligado (sem ESP32 de verdade nesta leitura).'
+        : 'Confira a porta serial e o cabo do adaptador USB-RS485. O secador continua funcionando sozinho - o controle mora no ESP, não no painel.';
     }
 
     if (ultimoConectado !== null && ultimoConectado !== d.conectado) {
@@ -1153,8 +1164,8 @@
     // ---------- modo, ventoinhas, resistencias, limites ----------
     renderizarBotoes(d);
     document.getElementById('avisoModo').textContent = d.modoManual
-      ? 'Manual: os botoes de resistencia, ventoinha 1 e ventoinha 2 comandam as saidas direto.'
-      : 'No automatico o ESP decide sozinho; os botoes abaixo ficam bloqueados.';
+      ? 'Manual: os botões de resistência, ventoinha 1 e ventoinha 2 comandam as saídas direto.'
+      : 'No automático o ESP decide sozinho; os botões abaixo ficam bloqueados.';
 
     if (ambiente && ambiente.ok) {
       animarValor('valorAmbiente', ambiente.valor1, function (v) { return v.toFixed(1) + '<span class="unid">&deg;C</span>'; });
@@ -1164,29 +1175,29 @@
       document.getElementById('valorPressao').textContent = 'BMP180 · sem leitura';
     }
 
-    // 5000 e um valor de referencia provisorio do firmware (CICLOS_MAXIMOS_SILICA), ate ter o
-    // numero real do fabricante da silica-gel.
+    // CICLOS_MAXIMOS (config.json, igual ao CICLOS_MAXIMOS_SILICA do firmware) ainda e provisorio,
+    // ate ter o numero real do fabricante da silica-gel.
     var ciclos = d.ciclosSilica != null ? d.ciclosSilica : 0;
     document.getElementById('valorCiclos').textContent = d.ciclosSilica != null ? ciclos : '--';
-    var pctCiclos = Math.max(0, Math.min(1, ciclos / 5000));
+    var pctCiclos = Math.max(0, Math.min(1, ciclos / CICLOS_MAXIMOS));
     var anel = document.getElementById('anelCiclos');
     anel.style.strokeDashoffset = (263.9 * (1 - pctCiclos)).toFixed(1);
     anel.style.stroke = pctCiclos < 0.7 ? 'var(--accent-2)' : (pctCiclos < 0.9 ? 'var(--accent)' : 'var(--danger)');
     document.getElementById('notaCiclos').textContent = d.ciclosSilica != null
-      ? Math.max(0, 5000 - ciclos) + ' restantes ate o limite'
-      : 'regeneracoes desde a instalacao';
+      ? Math.max(0, CICLOS_MAXIMOS - ciclos) + ' restantes até o limite'
+      : 'regenerações desde a instalação';
 
     var reconhecidos = d.alarmesReconhecidos || {};
     renderizarAlarme('Falha', 'falha', !!d.alarmeFalha, !!reconhecidos.falha,
-      'algum sensor nao respondeu na ultima leitura', 'nenhuma falha registrada');
+      'algum sensor não respondeu na última leitura', 'nenhuma falha registrada');
     renderizarAlarme('Saturacao', 'saturacao', !!d.alarmeSaturacao, !!reconhecidos.saturacao,
-      'silica-gel proxima do fim de vida util', 'dentro do limite de ciclos');
+      'sílica-gel próxima do fim da vida útil', 'dentro do limite de ciclos');
     if (ultimoAlarmeFalha === false && d.alarmeFalha === true) {
-      mostrarToast('Falha de funcionamento', 'Algum sensor nao respondeu na ultima leitura.');
+      mostrarToast('Falha de funcionamento', 'Algum sensor não respondeu na última leitura.');
     }
     ultimoAlarmeFalha = !!d.alarmeFalha;
     if (ultimoAlarmeSaturacao === false && d.alarmeSaturacao === true) {
-      mostrarToast('Silica-gel saturada', 'Numero de ciclos atingiu o limite recomendado.');
+      mostrarToast('Sílica-gel saturada', 'Número de ciclos atingiu o limite recomendado.');
     }
     ultimoAlarmeSaturacao = !!d.alarmeSaturacao;
 
@@ -1199,12 +1210,12 @@
       grade.innerHTML = SKELETON_SENSORES_HTML;
     } else {
       grade.innerHTML = sensores.map(function (s, idx) {
-        var rotulo2 = s.tipo === 'BMP180' ? 'Pressao' : 'Umidade';
+        var rotulo2 = s.tipo === 'BMP180' ? 'Pressão' : 'Umidade';
         var v1 = s.ok ? s.valor1.toFixed(1) + '&deg;C' : '--';
         var v2 = s.ok ? (s.tipo === 'BMP180' ? s.valor2.toFixed(0) + ' hPa' : s.valor2.toFixed(0) + '%') : '--';
         var tipoClasse = s.tipo === 'BMP180' ? 'tipo-bmp' : 'tipo-sht';
         return '<div class="sensor-tile ' + tipoClasse + (s.ok ? '' : ' erro') + '" data-idx="' + idx +
-          '" title="Clique para ver o historico">' +
+          '" title="Clique para ver o histórico">' +
           '<div class="nome">' + s.nome + '</div>' +
           '<div class="valor-principal' + (s.ok ? '' : ' off') + '" id="sensorV1_' + idx + '">' + v1 + '</div>' +
           (s.nome.indexOf('Topo') !== -1 ? termometroHTML(s.ok ? s.valor1 : null) : '') +
@@ -1237,13 +1248,13 @@
       var d = await r.json();
       renderizar(d);
     } catch (e) {
-      document.getElementById('pillConexaoTxt').textContent = 'sem conexao com o painel (servidor local)';
+      document.getElementById('pillConexaoTxt').textContent = 'sem conexão com o painel (servidor local)';
       document.getElementById('pillConexao').className = 'pill erro';
     }
   }
 
   // ---------- barra de status ----------
-  var NOMES_ALARME = { falha: 'Falha de funcionamento', saturacao: 'Silica no fim da vida util' };
+  var NOMES_ALARME = { falha: 'Falha de funcionamento', saturacao: 'Sílica no fim da vida útil' };
 
   function renderizarStatus(d) {
     var reconhecidos = d.alarmesReconhecidos || {};
@@ -1257,13 +1268,13 @@
     // o estado sempre vai com icone + texto, nunca so a cor
     var estado, icone, detalhe, classe;
     if (!d.conectado) {
-      estado = 'SEM COMUNICACAO'; icone = '✕'; classe = 'atencao';
-      detalhe = 'o ESP32 nao responde pelo RS-485';
+      estado = 'SEM COMUNICAÇÃO'; icone = '✕'; classe = 'atencao';
+      detalhe = 'o ESP32 não responde pelo RS-485';
     } else if (ativos.length) {
       estado = 'ALARME'; icone = '⚠'; classe = 'atencao' + (naoReconhecido ? ' piscando' : '');
       // curto pra caber numa linha: com dois alarmes os nomes ficam na lista de alarmes
       detalhe = (ativos.length > 1 ? ativos.length + ' alarmes ativos' : ativos[0]) +
-        (naoReconhecido ? ' - nao reconhecido' : ' - reconhecido');
+        (naoReconhecido ? ' - não reconhecido' : ' - reconhecido');
     } else {
       estado = 'NORMAL'; icone = '✓'; classe = 'normal';
       detalhe = 'sem alarmes ativos';
@@ -1274,19 +1285,19 @@
     document.getElementById('statusGeralDetalhe').textContent = detalhe;
 
     document.getElementById('statusModo').className = 'status-bloco status-modo' + (d.modoManual ? ' manual' : '');
-    document.getElementById('statusModoTxt').textContent = d.modoManual ? 'MANUAL' : 'AUTOMATICO';
+    document.getElementById('statusModoTxt').textContent = d.modoManual ? 'MANUAL' : 'AUTOMÁTICO';
 
     var desde = d.desdeSeg || [null, null];
     var ciclosPendentes = d.cicloIncompleto || [false, false];
-    function ha(i) { return desde[i] != null ? ' ha ' + formatarDuracao(desde[i]) : ''; }
+    function ha(i) { return desde[i] != null ? ' há ' + formatarDuracao(desde[i]) : ''; }
     var atividade;
     if (!d.conectado) atividade = 'Sem dados do ESP32';
-    else if (d.resistenciaE1 && d.resistenciaE2) atividade = 'Estagios 1 e 2 aquecendo';
-    else if (d.resistenciaE1) atividade = 'Estagio 1 regenerando' + ha(0);
-    else if (d.resistenciaE2) atividade = 'Estagio 2 regenerando' + ha(1);
+    else if (d.resistenciaE1 && d.resistenciaE2) atividade = 'Estágios 1 e 2 aquecendo';
+    else if (d.resistenciaE1) atividade = 'Estágio 1 regenerando' + ha(0);
+    else if (d.resistenciaE2) atividade = 'Estágio 2 regenerando' + ha(1);
     else if (ciclosPendentes[0] || ciclosPendentes[1]) {
-      atividade = 'Ciclo pendente no Estagio ' + (ciclosPendentes[0] ? 1 : 2) + ', esperando esfriar';
-    } else atividade = 'Em espera, nenhum estagio aquecendo';
+      atividade = 'Ciclo pendente no Estágio ' + (ciclosPendentes[0] ? 1 : 2) + ', esperando esfriar';
+    } else atividade = 'Em espera, nenhum estágio aquecendo';
     var elAtividade = document.getElementById('statusAtividade');
     elAtividade.textContent = atividade;
     elAtividade.title = atividade;
@@ -1329,7 +1340,7 @@
       }
     } catch (e2) {
       botao.disabled = false;
-      mostrarToast('Alarme nao reconhecido', e2.name === 'AbortError' ? 'O servidor do painel nao respondeu a tempo.' : e2.message);
+      mostrarToast('Alarme não reconhecido', e2.name === 'AbortError' ? 'O servidor do painel não respondeu a tempo.' : e2.message);
     }
     atualizar();
   });
@@ -1394,7 +1405,7 @@
       }
       erro.textContent = 'PIN incorreto';
     } catch (e) {
-      erro.textContent = 'Sem conexao com o servidor do painel';
+      erro.textContent = 'Sem conexão com o servidor do painel';
     }
     pinDigitado = '';
     desenharPin();
@@ -1445,7 +1456,7 @@
       ? 'Trocar o modo e gravar limites pede PIN (vale por 5 min depois de digitado). Para mudar o PIN, ' +
         'edite <code>pin_ajustes</code> no config.json e reinicie o painel.'
       : 'Sem PIN: qualquer pessoa na tela pode trocar o modo e os limites. Para proteger, coloque um PIN ' +
-        'numerico em <code>pin_ajustes</code> no config.json e reinicie o painel.';
+        'numérico em <code>pin_ajustes</code> no config.json e reinicie o painel.';
     modalAjustes.hidden = false;
   }
 
@@ -1473,7 +1484,7 @@
     return '<button class="legenda-item" type="button" data-serie="' + i + '" title="Mostrar/ocultar">' +
       '<i style="background:var(' + s.cor + ')"></i>' + s.rotulo + ' <b id="legendaValor' + i + '">--</b></button>';
   }).join('') +
-    '<span class="legenda-item" style="cursor:default"><i style="background:var(--accent);height:8px"></i>resistencia ligada</span>' +
+    '<span class="legenda-item" style="cursor:default"><i style="background:var(--accent);height:8px"></i>resistência ligada</span>' +
     '<span class="legenda-ajuda">toque na legenda para ocultar uma curva</span>';
 
   function formatarMetrica(v, metrica) {
@@ -1521,7 +1532,7 @@
     var dados = tendencia.dados;
     if (!dados) {
       ctx.fillStyle = cor('--ink-dim'); ctx.textAlign = 'center';
-      ctx.fillText('Carregando historico...', w / 2, h / 2);
+      ctx.fillText('Carregando histórico...', w / 2, h / 2);
       return;
     }
 
@@ -1540,7 +1551,7 @@
 
     if (!valores.length) {
       ctx.fillStyle = cor('--ink-dim'); ctx.textAlign = 'center';
-      ctx.fillText(visiveis.length ? 'Sem leituras nesse periodo ainda' : 'Todas as curvas ocultas',
+      ctx.fillText(visiveis.length ? 'Sem leituras nesse período ainda' : 'Todas as curvas ocultas',
         margem.e + largura / 2, margem.t + altura / 2);
     }
 
@@ -1675,7 +1686,7 @@
         return '<div><i style="display:inline-block;width:10px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px;background:var(' +
           SERIES_TENDENCIA[l.i].cor + ')"></i>' + SERIES_TENDENCIA[l.i].rotulo + ' <b>' + formatarMetrica(l.p[metrica], metrica) + '</b></div>';
       }).join('') +
-      '<div style="color:var(--ink-dim);margin-top:3px">' + (aquecendo.length ? 'aquecendo: ' + aquecendo.join(', ') : 'nenhuma resistencia ligada') + '</div>';
+      '<div style="color:var(--ink-dim);margin-top:3px">' + (aquecendo.length ? 'aquecendo: ' + aquecendo.join(', ') : 'nenhuma resistência ligada') + '</div>';
     tooltipTend.hidden = false;
     var esquerda = xCursor + 14;
     if (esquerda + tooltipTend.offsetWidth > g.w) esquerda = xCursor - 14 - tooltipTend.offsetWidth;
@@ -1743,13 +1754,13 @@
       corpo: function (ligar) { return { ligar: ligar }; } },
     botaoVentoinha2: { rotulo: 'Ventoinha 2', url: '/api/ventoinha', textos: ['Ligada', 'Desligada'],
       corpo: function (ligar) { return { ligar: ligar, id: 2 }; } },
-    botaoResistE1: { rotulo: 'Resistencia do Estagio 1', url: '/api/resistencia', estagio: 1,
+    botaoResistE1: { rotulo: 'Resistência do Estágio 1', url: '/api/resistencia', estagio: 1,
       textos: ['Ligada', 'Desligada'],
       corpo: function (ligar) { return { estagio: 1, ligar: ligar }; } },
-    botaoResistE2: { rotulo: 'Resistencia do Estagio 2', url: '/api/resistencia', estagio: 2,
+    botaoResistE2: { rotulo: 'Resistência do Estágio 2', url: '/api/resistencia', estagio: 2,
       textos: ['Ligada', 'Desligada'],
       corpo: function (ligar) { return { estagio: 2, ligar: ligar }; } },
-    botaoModo: { rotulo: 'Modo de operacao', url: '/api/modo', textos: ['Manual', 'Automatico'], enviando: 'Mudando...',
+    botaoModo: { rotulo: 'Modo de operação', url: '/api/modo', textos: ['Manual', 'Automático'], enviando: 'Mudando...',
       protegido: true, corpo: function (manual) { return { manual: manual }; } },
   };
   var ESPERA_CONFIRMACAO_MS = 8000;  // leitura a cada 2 s: sobra folga pra porta serial lenta
@@ -1762,8 +1773,8 @@
     var p = pendentes[id];
     if (p && (ligado === p.esperado || Date.now() > p.ate)) {
       if (ligado !== p.esperado) {
-        mostrarToast(cmd.rotulo + ': sem confirmacao',
-          'O pedido chegou, mas a saida nao mudou na leitura do ESP32. Confira o modo e a conexao.');
+        mostrarToast(cmd.rotulo + ': sem confirmação',
+          'O pedido chegou, mas a saída não mudou na leitura do ESP32. Confira o modo e a conexão.');
       }
       delete pendentes[id];
       p = null;
@@ -1782,9 +1793,9 @@
   }
 
   function renderizarBotoes(d) {
-    var semConexao = d.conectado ? '' : 'Sem resposta do ESP32: o comando nao chegaria. Confira o cabo RS-485.';
+    var semConexao = d.conectado ? '' : 'Sem resposta do ESP32: o comando não chegaria. Confira o cabo RS-485.';
     var noAutomatico = semConexao || (d.modoManual ? '' :
-      'No modo automatico o ESP decide sozinho. Troque para Manual no painel "Controle" para comandar as saidas.');
+      'No modo automático o ESP decide sozinho. Troque para Manual no painel "Controle" para comandar as saídas.');
     atualizarBotao('botaoVentoinha', !!d.ventoinha, noAutomatico);
     atualizarBotao('botaoVentoinha2', !!d.ventoinha2, noAutomatico);
     atualizarBotao('botaoResistE1', !!d.resistenciaE1, noAutomatico);
@@ -1810,9 +1821,9 @@
       }
     } catch (e) {
       delete pendentes[id];
-      var motivo = e.name === 'AbortError' ? 'O servidor do painel nao respondeu a tempo.'
-        : (e instanceof TypeError ? 'Sem conexao com o servidor do painel.' : e.message);
-      mostrarToast(cmd.rotulo + ': comando nao enviado', motivo);
+      var motivo = e.name === 'AbortError' ? 'O servidor do painel não respondeu a tempo.'
+        : (e instanceof TypeError ? 'Sem conexão com o servidor do painel.' : e.message);
+      mostrarToast(cmd.rotulo + ': comando não enviado', motivo);
     }
     atualizar();
   }
@@ -1827,10 +1838,10 @@
       var cmd = COMANDOS[id];
       var ligar = !estadoSaidas[id];
       if (cmd.estagio && ligar) {
-        var texto = 'No modo manual ela fica ligada ate voce desligar' +
-          (limitesAtuais ? ' ou ate atingir a temperatura maxima do manual (' + formatarLimite(limitesAtuais.temp) + ' °C)' : '') + '.' +
-          (estadoSaidas.botaoVentoinha ? '' : ' Atencao: a Ventoinha 1 esta desligada.');
-        var confirmado = await confirmar('Ligar a resistencia do Estagio ' + cmd.estagio + '?', texto, 'Ligar resistencia');
+        var texto = 'No modo manual ela fica ligada até você desligar' +
+          (limitesAtuais ? ' ou até atingir a temperatura máxima do manual (' + formatarLimite(limitesAtuais.temp) + ' °C)' : '') + '.' +
+          (estadoSaidas.botaoVentoinha ? '' : ' Atenção: a Ventoinha 1 está desligada.');
+        var confirmado = await confirmar('Ligar a resistência do Estágio ' + cmd.estagio + '?', texto, 'Ligar resistência');
         if (!confirmado) return;
       }
       if (cmd.protegido && !(await liberarComPin('PIN para trocar o modo'))) return;
@@ -1891,7 +1902,7 @@
       status.className = 'limites-status ok';
       atualizar();
     } catch (e) {
-      status.textContent = e.message || 'Nao foi possivel salvar.';
+      status.textContent = e.message || 'Não foi possível salvar.';
       status.className = 'limites-status erro';
     } finally {
       botao.disabled = false;
@@ -1947,7 +1958,7 @@
 
   function descreverMetrica(dados, metrica) {
     if (metrica === 'v1') return { rotulo: 'Temperatura', unidade: '°C', cor: '#ff8a3d' };
-    if (dados.tipo === 'BMP180') return { rotulo: 'Pressao', unidade: ' hPa', cor: '#a78bfa' };
+    if (dados.tipo === 'BMP180') return { rotulo: 'Pressão', unidade: ' hPa', cor: '#a78bfa' };
     return { rotulo: 'Umidade', unidade: '%', cor: '#4fa8e8' };
   }
 
@@ -1996,7 +2007,7 @@
     if (!pontos.length) {
       ctx.fillStyle = corTexto;
       ctx.textAlign = 'center';
-      ctx.fillText('Sem dados nesse periodo ainda', w / 2, h / 2);
+      ctx.fillText('Sem dados nesse período ainda', w / 2, h / 2);
       return;
     }
 
@@ -2112,10 +2123,10 @@
     var v = dados.pontos.map(function (p) { return p[grafico.metrica]; });
     var soma = v.reduce(function (a, b) { return a + b; }, 0);
     resumo.innerHTML =
-      '<span>' + m.rotulo + ' minima <b>' + Math.min.apply(null, v).toFixed(1) + m.unidade + '</b></span>' +
-      '<span>media <b>' + (soma / v.length).toFixed(1) + m.unidade + '</b></span>' +
-      '<span>maxima <b>' + Math.max.apply(null, v).toFixed(1) + m.unidade + '</b></span>' +
-      '<span>(medias por faixa de tempo, ' + v.length + ' pontos)</span>';
+      '<span>' + m.rotulo + ' mínima <b>' + Math.min.apply(null, v).toFixed(1) + m.unidade + '</b></span>' +
+      '<span>média <b>' + (soma / v.length).toFixed(1) + m.unidade + '</b></span>' +
+      '<span>máxima <b>' + Math.max.apply(null, v).toFixed(1) + m.unidade + '</b></span>' +
+      '<span>(médias por faixa de tempo, ' + v.length + ' pontos)</span>';
   }
 
   async function carregarGrafico() {
@@ -2130,7 +2141,7 @@
       atualizarResumoGrafico();
       desenharGrafico(null);
     } catch (e) {
-      document.getElementById('modalResumo').textContent = 'Nao foi possivel carregar o historico agora.';
+      document.getElementById('modalResumo').textContent = 'Não foi possível carregar o histórico agora.';
     }
   }
 

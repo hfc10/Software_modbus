@@ -94,6 +94,11 @@ CONFIG_PADRAO = {
     "intervalo_gravacao_seg": 10,
     "retencao_dias": 30,
     "pin_ajustes": "",
+    # Referencias do firmware que o painel so mostra (anel de ciclos, termometro, linhas dos
+    # graficos). Tem que bater com src/teste_modbus.cpp: o controle de verdade e do ESP.
+    "ciclos_maximos_silica": 5000,
+    "temp_corte_c": 85.0,
+    "temp_religa_c": 70.0,
 }
 
 
@@ -107,6 +112,9 @@ def carregar_config():
             # PIN escrito sem aspas (1234) tambem vale; sem isso o painel ficaria sem PIN
             if chave == "pin_ajustes" and type(valor) is int:
                 valor = str(valor)
+            # 85 vale onde o padrao e 85.0
+            if type(CONFIG_PADRAO.get(chave)) is float and type(valor) is int:
+                valor = float(valor)
             if chave not in CONFIG_PADRAO:
                 print(f"config.json: chave desconhecida ignorada: {chave}")
             elif type(valor) is not type(CONFIG_PADRAO[chave]):
@@ -117,6 +125,14 @@ def carregar_config():
         pass  # sem config.json: usa os padroes
     except (OSError, ValueError) as erro:
         print(f"config.json ilegivel ({erro}), usando os padroes")
+
+    if config["ciclos_maximos_silica"] <= 0:
+        print("config.json: 'ciclos_maximos_silica' precisa ser maior que zero, usando o padrao")
+        config["ciclos_maximos_silica"] = CONFIG_PADRAO["ciclos_maximos_silica"]
+    if not 0 < config["temp_religa_c"] < config["temp_corte_c"]:
+        print("config.json: 'temp_religa_c' precisa ser menor que 'temp_corte_c', usando os padroes")
+        config["temp_religa_c"] = CONFIG_PADRAO["temp_religa_c"]
+        config["temp_corte_c"] = CONFIG_PADRAO["temp_corte_c"]
     return config
 
 
@@ -139,6 +155,9 @@ INTERVALO_LEITURA_SEG = CONFIG["intervalo_leitura_seg"]
 INTERVALO_GRAVACAO_SEG = argumento_inteiro("--gravacao-seg") or CONFIG["intervalo_gravacao_seg"]
 RETENCAO_DIAS = CONFIG["retencao_dias"]
 PIN_AJUSTES = CONFIG["pin_ajustes"].strip()
+CICLOS_MAXIMOS_SILICA = CONFIG["ciclos_maximos_silica"]
+TEMP_CORTE = CONFIG["temp_corte_c"]
+TEMP_RELIGA = CONFIG["temp_religa_c"]
 
 # Mesma ordem/enderecos definidos no firmware (src/teste_modbus.cpp)
 SENSORES = [
@@ -172,7 +191,7 @@ EVENTOS_EM_MEMORIA = 50
 EVENTOS_NO_PAINEL = 30
 
 # Nomes dos alarmes como aparecem no reconhecimento (chave usada pela API e pelo painel)
-ALARMES = {"falha": "falha de funcionamento", "saturacao": "silica saturada / fim de vida"}
+ALARMES = {"falha": "falha de funcionamento", "saturacao": "sílica saturada / fim de vida"}
 
 # Depois de quantas rodadas seguidas sem nenhuma resposta do ESP32 a serial e fechada e reaberta
 # (cobre o adaptador USB-RS485 que foi desplugado e plugado de novo)
@@ -208,6 +227,7 @@ estado = {
     # reconhecido pelo operador no painel; volta a False quando o alarme normaliza
     "alarmesReconhecidos": {"falha": False, "saturacao": False},
     "pinAtivo": bool(PIN_AJUSTES),
+    "referencias": {"ciclosMaximos": CICLOS_MAXIMOS_SILICA, "tempCorte": TEMP_CORTE, "tempReliga": TEMP_RELIGA},
     "ciclosSilica": 0,
     "ultimaAtualizacao": 0,
     "historico": [],
@@ -320,7 +340,7 @@ _anterior = None  # o que foi lido na rodada anterior, pra perceber mudancas e g
 
 def descrever_estagio(sensores_lidos, i):
     topo, base = sensores_lidos[2 * i], sensores_lidos[2 * i + 1]
-    return f"topo {topo['valor1']:.1f} C, base {base['valor2']:.0f}%"
+    return f"topo {topo['valor1']:.1f} °C, base {base['valor2']:.0f}%"
 
 
 def detectar_eventos(conectado, sensores_lidos, ventoinha, r1, r2, alarme_falha, alarme_sat, ciclos):
@@ -339,11 +359,11 @@ def detectar_eventos(conectado, sensores_lidos, ventoinha, r1, r2, alarme_falha,
     if not conectado:
         # sem resposta, os valores vem zerados: so avisa da conexao, o resto espera voltar
         if ant["conectado"]:
-            registrar_evento("aviso", "Conexao Modbus perdida (ESP32 sem resposta)")
+            registrar_evento("aviso", "Conexão Modbus perdida (ESP32 sem resposta)")
             ant["conectado"] = False
         return
     if not ant["conectado"]:
-        registrar_evento("info", "Conexao Modbus estabelecida")
+        registrar_evento("info", "Conexão Modbus estabelecida")
 
     if ventoinha != ant["ventoinha"]:
         registrar_evento("info", "Ventoinha ligada" if ventoinha else "Ventoinha desligada")
@@ -351,7 +371,7 @@ def detectar_eventos(conectado, sensores_lidos, ventoinha, r1, r2, alarme_falha,
     for i, ligada in enumerate((r1, r2)):
         if ligada != ant["r"][i]:
             acao = "ligada" if ligada else "desligada"
-            registrar_evento("info", f"Estagio {i + 1}: resistencia {acao} ({descrever_estagio(sensores_lidos, i)})")
+            registrar_evento("info", f"Estágio {i + 1}: resistência {acao} ({descrever_estagio(sensores_lidos, i)})")
 
     if alarme_falha != ant["falha"]:
         if alarme_falha:
@@ -360,12 +380,12 @@ def detectar_eventos(conectado, sensores_lidos, ventoinha, r1, r2, alarme_falha,
             registrar_evento("info", "Alarme de falha de funcionamento normalizado")
     if alarme_sat != ant["sat"]:
         if alarme_sat:
-            registrar_evento("alarme", "ALARME: silica-gel saturada / fim de vida")
+            registrar_evento("alarme", "ALARME: sílica-gel saturada / fim de vida")
         else:
-            registrar_evento("info", "Alarme de saturacao da silica normalizado")
+            registrar_evento("info", "Alarme de saturação da sílica normalizado")
 
     if ciclos > ant["ciclos"]:
-        registrar_evento("info", f"Ciclo de regeneracao concluido (total: {ciclos})")
+        registrar_evento("info", f"Ciclo de regeneração concluído (total: {ciclos})")
 
     for idx, ok in enumerate(atual["ok"]):
         if ok != ant["ok"][idx]:
@@ -388,7 +408,7 @@ def publicar_controle(ventoinha2, modo_manual, limites, ciclo_incompleto, desde_
     ant = _controle_anterior
     if ant is not None:
         if modo_manual != ant["modo"]:
-            registrar_evento("info", "Modo MANUAL ativado" if modo_manual else "Modo AUTOMATICO ativado")
+            registrar_evento("info", "Modo MANUAL ativado" if modo_manual else "Modo AUTOMÁTICO ativado")
         limites_mudaram = any(
             abs(limites.get(chave, 0) - ant["limites"].get(chave, 0)) > 0.05
             for chave in ("ligar", "desligar", "temp")
@@ -397,7 +417,7 @@ def publicar_controle(ventoinha2, modo_manual, limites, ciclo_incompleto, desde_
             registrar_evento(
                 "info",
                 f"Limites atualizados: ligar {limites['ligar']:.1f}%, "
-                f"desligar {limites['desligar']:.1f}%, temp. maxima {limites['temp']:.1f} C",
+                f"desligar {limites['desligar']:.1f}%, temp. máxima {limites['temp']:.1f} °C",
             )
     _controle_anterior = {"modo": modo_manual, "limites": dict(limites)}
 
@@ -569,7 +589,7 @@ def loop_leitura():
             with trava:
                 estado["conectado"] = False
             if _anterior is not None and _anterior["conectado"]:
-                registrar_evento("aviso", "Conexao Modbus perdida (porta serial indisponivel)")
+                registrar_evento("aviso", "Conexão Modbus perdida (porta serial indisponível)")
                 _anterior["conectado"] = False
 
         ciclos_desde_limpeza += 1
@@ -594,8 +614,8 @@ class Simulador:
     TEMP_AMBIENTE = 25.0
     LIMITE_LIGAR_UMIDADE = 55.0
     LIMITE_DESLIGAR_UMIDADE = 8.0
-    TEMP_DESLIGAR = 85.0
-    TEMP_RELIGAR = 70.0
+    TEMP_DESLIGAR = TEMP_CORTE
+    TEMP_RELIGAR = TEMP_RELIGA
     SEGUNDOS_MANUAL = 90
 
     def __init__(self):
@@ -761,7 +781,7 @@ class Simulador:
             ]
             return (
                 sensores_lidos, self.ventoinha, self.resistencia[0], self.resistencia[1],
-                self.ciclos >= 5000, self.ciclos,
+                self.ciclos >= CICLOS_MAXIMOS_SILICA, self.ciclos,
             )
 
 
@@ -862,7 +882,7 @@ def api_reconhecer_alarme():
         if ativo:
             estado["alarmesReconhecidos"][alarme] = True
     if not ativo:
-        return jsonify({"erro": "esse alarme nao esta ativo"}), 409
+        return jsonify({"erro": "esse alarme não está ativo"}), 409
     if not ja_reconhecido:
         registrar_evento("info", f"Alarme reconhecido no painel: {ALARMES[alarme]}")
     return jsonify({"ok": True})
@@ -891,7 +911,7 @@ def api_limites():
         desligar = float(request.json["desligar"])
         temp = float(request.json["temp"])
     except (KeyError, TypeError, ValueError):
-        return jsonify({"erro": "informe ligar, desligar e temp (numeros)"}), 400
+        return jsonify({"erro": "informe ligar, desligar e temp (números)"}), 400
     if not (0 <= desligar < ligar <= 100 and 0 <= temp <= 125):
         return jsonify({"erro": "umidade entre 0 e 100 (desligar menor que ligar) e temp entre 0 e 125"}), 400
 
@@ -949,7 +969,7 @@ def api_historico():
         sensor = int(request.args.get("sensor", 0))
         horas = ler_periodo()
     except ValueError:
-        return jsonify({"erro": "sensor e horas precisam ser numeros"}), 400
+        return jsonify({"erro": "sensor e horas precisam ser números"}), 400
     if not 0 <= sensor < len(SENSORES):
         return jsonify({"erro": "sensor inexistente"}), 404
 
@@ -994,7 +1014,7 @@ def api_tendencia():
     try:
         horas = ler_periodo()
     except ValueError:
-        return jsonify({"erro": "horas precisa ser numero"}), 400
+        return jsonify({"erro": "horas precisa ser número"}), 400
 
     desde = time.time() - horas * 3600
     with abrir_banco() as con:
@@ -1068,7 +1088,7 @@ if __name__ == "__main__":
     except Exception as erro:
         print(f"Erro ao restaurar historico: {erro}")
 
-    registrar_evento("info", "Painel iniciado" + (" (modo simulacao)" if SIMULAR else ""))
+    registrar_evento("info", "Painel iniciado" + (" (modo simulação)" if SIMULAR else ""))
 
     if SIMULAR:
         print("*** MODO SIMULACAO: dados ficticios, sem porta serial ***")

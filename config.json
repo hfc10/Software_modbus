@@ -6,5 +6,8 @@
   "intervalo_leitura_seg": 2,
   "intervalo_gravacao_seg": 10,
   "retencao_dias": 30,
-  "pin_ajustes": ""
+  "pin_ajustes": "",
+  "ciclos_maximos_silica": 5000,
+  "temp_corte_c": 85.0,
+  "temp_religa_c": 70.0
 }
