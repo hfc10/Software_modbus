@@ -53,13 +53,19 @@ Historico: as leituras sao gravadas num SQLite (historico.db, ao lado deste arqu
 simulacao usa historico_simulado.db) e ficam 30 dias. Os mini-graficos sobrevivem a reinicio,
 /api/historico alimenta o grafico grande de cada sensor e /api/exportar.csv?horas=24 baixa as
 leituras em CSV. Os eventos (resistencia ligou/desligou, alarmes, conexao) ficam na tabela
-"eventos" do mesmo banco e aparecem na lista "Eventos recentes" do painel.
+"eventos" do mesmo banco e aparecem na lista "Alarmes e eventos" do painel. O estado das
+saidas (resistencias e ventoinha) e gravado junto com as leituras, na tabela "saidas", e
+/api/tendencia usa isso pra marcar no grafico de tendencia quando cada estagio aqueceu.
+
+PIN (opcional): com "pin_ajustes" no config.json, trocar o modo e gravar limites passam a pedir
+esse PIN no painel (cabecalho X-Pin na API). Vazio = sem PIN.
 """
 
 import collections
 import contextlib
 import csv
 import datetime
+import hmac
 import io
 import json
 import os
@@ -87,6 +93,7 @@ CONFIG_PADRAO = {
     "intervalo_leitura_seg": 2,
     "intervalo_gravacao_seg": 10,
     "retencao_dias": 30,
+    "pin_ajustes": "",
 }
 
 
@@ -97,6 +104,9 @@ def carregar_config():
         with open(caminho, encoding="utf-8") as arquivo:
             lido = json.load(arquivo)
         for chave, valor in lido.items():
+            # PIN escrito sem aspas (1234) tambem vale; sem isso o painel ficaria sem PIN
+            if chave == "pin_ajustes" and type(valor) is int:
+                valor = str(valor)
             if chave not in CONFIG_PADRAO:
                 print(f"config.json: chave desconhecida ignorada: {chave}")
             elif type(valor) is not type(CONFIG_PADRAO[chave]):
@@ -128,6 +138,7 @@ PORTA_HTTP = argumento_inteiro("--porta-http") or CONFIG["porta_http"]
 INTERVALO_LEITURA_SEG = CONFIG["intervalo_leitura_seg"]
 INTERVALO_GRAVACAO_SEG = argumento_inteiro("--gravacao-seg") or CONFIG["intervalo_gravacao_seg"]
 RETENCAO_DIAS = CONFIG["retencao_dias"]
+PIN_AJUSTES = CONFIG["pin_ajustes"].strip()
 
 # Mesma ordem/enderecos definidos no firmware (src/teste_modbus.cpp)
 SENSORES = [
@@ -158,7 +169,10 @@ HISTORICO_TAMANHO = 30
 
 # Eventos: quantos guardar em memoria e quantos mandar pro painel
 EVENTOS_EM_MEMORIA = 50
-EVENTOS_NO_PAINEL = 12
+EVENTOS_NO_PAINEL = 30
+
+# Nomes dos alarmes como aparecem no reconhecimento (chave usada pela API e pelo painel)
+ALARMES = {"falha": "falha de funcionamento", "saturacao": "silica saturada / fim de vida"}
 
 # Depois de quantas rodadas seguidas sem nenhuma resposta do ESP32 a serial e fechada e reaberta
 # (cobre o adaptador USB-RS485 que foi desplugado e plugado de novo)
@@ -191,6 +205,9 @@ estado = {
     "resistenciaE2": False,
     "alarmeFalha": False,
     "alarmeSaturacao": False,
+    # reconhecido pelo operador no painel; volta a False quando o alarme normaliza
+    "alarmesReconhecidos": {"falha": False, "saturacao": False},
+    "pinAtivo": bool(PIN_AJUSTES),
     "ciclosSilica": 0,
     "ultimaAtualizacao": 0,
     "historico": [],
@@ -228,10 +245,15 @@ def inicializar_banco():
             "ts REAL NOT NULL, tipo TEXT NOT NULL, mensagem TEXT NOT NULL)"
         )
         con.execute("CREATE INDEX IF NOT EXISTS idx_eventos_ts ON eventos(ts)")
+        con.execute(
+            "CREATE TABLE IF NOT EXISTS saidas ("
+            "ts REAL NOT NULL, resistencia_e1 INTEGER, resistencia_e2 INTEGER, ventoinha INTEGER)"
+        )
+        con.execute("CREATE INDEX IF NOT EXISTS idx_saidas_ts ON saidas(ts)")
         con.commit()
 
 
-def salvar_leituras(ts, sensores_lidos):
+def salvar_leituras(ts, sensores_lidos, r1, r2, ventoinha):
     with abrir_banco() as con:
         con.executemany(
             "INSERT INTO leituras (ts, sensor, valor1, valor2, ok) VALUES (?, ?, ?, ?, ?)",
@@ -239,6 +261,10 @@ def salvar_leituras(ts, sensores_lidos):
                 (ts, idx, s["valor1"], s["valor2"], 1 if s["ok"] else 0)
                 for idx, s in enumerate(sensores_lidos)
             ],
+        )
+        con.execute(
+            "INSERT INTO saidas (ts, resistencia_e1, resistencia_e2, ventoinha) VALUES (?, ?, ?, ?)",
+            (ts, int(r1), int(r2), int(ventoinha)),
         )
         con.commit()
 
@@ -248,6 +274,7 @@ def limpar_dados_antigos():
     with abrir_banco() as con:
         con.execute("DELETE FROM leituras WHERE ts < ?", (limite,))
         con.execute("DELETE FROM eventos WHERE ts < ?", (limite,))
+        con.execute("DELETE FROM saidas WHERE ts < ?", (limite,))
         con.commit()
 
 
@@ -401,7 +428,7 @@ def publicar_estado(conectado, sensores_lidos, ventoinha, r1, r2, alarme_falha, 
     if conectado and agora - _ultima_gravacao >= INTERVALO_GRAVACAO_SEG:
         _ultima_gravacao = agora
         try:
-            salvar_leituras(agora, sensores_lidos)
+            salvar_leituras(agora, sensores_lidos, r1, r2, ventoinha)
         except Exception as erro:
             # Falha ao gravar (disco cheio, arquivo travado) nao pode derrubar a leitura ao vivo.
             print(f"Erro ao gravar historico: {erro}")
@@ -419,6 +446,11 @@ def publicar_estado(conectado, sensores_lidos, ventoinha, r1, r2, alarme_falha, 
         estado["resistenciaE2"] = r2
         estado["alarmeFalha"] = alarme_falha
         estado["alarmeSaturacao"] = alarme_sat
+        # alarme que normalizou perde o reconhecimento: se voltar, pisca de novo
+        if not alarme_falha:
+            estado["alarmesReconhecidos"]["falha"] = False
+        if not alarme_sat:
+            estado["alarmesReconhecidos"]["saturacao"] = False
         estado["ciclosSilica"] = ciclos
         estado["ultimaAtualizacao"] = agora
         estado["historico"] = [
@@ -799,8 +831,48 @@ def api_ventoinha():
     return executar_comando(escrever_coil, reg, ligar)
 
 
+def pin_confere(pin):
+    return not PIN_AJUSTES or hmac.compare_digest(str(pin or ""), PIN_AJUSTES)
+
+
+def pin_recusado():
+    """Resposta 401 pras rotas protegidas quando o PIN do cabecalho X-Pin nao bate (ou None)."""
+    if pin_confere(request.headers.get("X-Pin")):
+        return None
+    return jsonify({"erro": "PIN incorreto ou ausente"}), 401
+
+
+@app.route("/api/pin", methods=["POST"])
+def api_pin():
+    """So confere o PIN (o painel pergunta antes de abrir os ajustes ou trocar o modo)."""
+    if pin_confere((request.json or {}).get("pin")):
+        return jsonify({"ok": True})
+    time.sleep(0.5)  # atrasa tentativa e erro no teclado
+    return jsonify({"erro": "PIN incorreto"}), 401
+
+
+@app.route("/api/alarmes/reconhecer", methods=["POST"])
+def api_reconhecer_alarme():
+    alarme = (request.json or {}).get("alarme")
+    if alarme not in ALARMES:
+        return jsonify({"erro": "alarme inexistente"}), 404
+    with trava:
+        ativo = estado["alarmeFalha"] if alarme == "falha" else estado["alarmeSaturacao"]
+        ja_reconhecido = estado["alarmesReconhecidos"][alarme]
+        if ativo:
+            estado["alarmesReconhecidos"][alarme] = True
+    if not ativo:
+        return jsonify({"erro": "esse alarme nao esta ativo"}), 409
+    if not ja_reconhecido:
+        registrar_evento("info", f"Alarme reconhecido no painel: {ALARMES[alarme]}")
+    return jsonify({"ok": True})
+
+
 @app.route("/api/modo", methods=["POST"])
 def api_modo():
+    recusa = pin_recusado()
+    if recusa:
+        return recusa
     manual = bool(request.json.get("manual", False))
     if SIMULAR:
         return executar_comando(simulador.comando_modo, manual)
@@ -811,6 +883,9 @@ def api_modo():
 def api_limites():
     """Grava os limites de controle no ESP (o firmware recusa valores invalidos e devolve os
     antigos, entao o painel confere o que ficou na proxima leitura)."""
+    recusa = pin_recusado()
+    if recusa:
+        return recusa
     try:
         ligar = float(request.json["ligar"])
         desligar = float(request.json["desligar"])
@@ -848,28 +923,39 @@ def api_resistencia():
     return executar_comando(escrever_coil, reg, ligar)
 
 
+PONTOS_POR_SERIE = 240  # leituras do periodo agrupadas em ate tantas faixas de tempo (media)
+
+
+def serie_agrupada(con, sensor, desde, horas):
+    largura = horas * 3600 / PONTOS_POR_SERIE
+    linhas = con.execute(
+        "SELECT CAST((ts - ?) / ? AS INTEGER) AS faixa, AVG(valor1), AVG(valor2), MIN(ts) "
+        "FROM leituras WHERE sensor = ? AND ok = 1 AND ts >= ? GROUP BY faixa ORDER BY faixa",
+        (desde, largura, sensor, desde),
+    ).fetchall()
+    return [{"ts": ts, "v1": round(v1, 2), "v2": round(v2, 2)} for _, v1, v2, ts in linhas]
+
+
+def ler_periodo():
+    """?horas=H da requisicao, limitado a retencao. Levanta ValueError se nao for numero."""
+    horas = float(request.args.get("horas", 1))
+    return max(0.05, min(horas, RETENCAO_DIAS * 24))
+
+
 @app.route("/api/historico")
 def api_historico():
-    """Serie de um sensor pro grafico grande: ?sensor=<indice>&horas=<periodo>. As leituras do
-    periodo sao agrupadas em ate PONTOS faixas de tempo (media de cada faixa)."""
-    PONTOS = 240
+    """Serie de um sensor pro grafico grande: ?sensor=<indice>&horas=<periodo>."""
     try:
         sensor = int(request.args.get("sensor", 0))
-        horas = float(request.args.get("horas", 1))
+        horas = ler_periodo()
     except ValueError:
         return jsonify({"erro": "sensor e horas precisam ser numeros"}), 400
     if not 0 <= sensor < len(SENSORES):
         return jsonify({"erro": "sensor inexistente"}), 404
-    horas = max(0.05, min(horas, RETENCAO_DIAS * 24))
 
     desde = time.time() - horas * 3600
-    largura = horas * 3600 / PONTOS
     with abrir_banco() as con:
-        linhas = con.execute(
-            "SELECT CAST((ts - ?) / ? AS INTEGER) AS faixa, AVG(valor1), AVG(valor2), MIN(ts) "
-            "FROM leituras WHERE sensor = ? AND ok = 1 AND ts >= ? GROUP BY faixa ORDER BY faixa",
-            (desde, largura, sensor, desde),
-        ).fetchall()
+        pontos = serie_agrupada(con, sensor, desde, horas)
 
     return jsonify({
         "nome": SENSORES[sensor]["nome"],
@@ -877,7 +963,56 @@ def api_historico():
         "horas": horas,
         "agora": time.time(),
         "intervalo_gravacao_seg": INTERVALO_GRAVACAO_SEG,
-        "pontos": [{"ts": ts, "v1": round(v1, 2), "v2": round(v2, 2)} for _, v1, v2, ts in linhas],
+        "pontos": pontos,
+    })
+
+
+def periodos_ligada(linhas, coluna, intervalo_max):
+    """Transforma as amostras gravadas de uma saida em faixas [inicio, fim] em que ficou ligada.
+    Um buraco maior que intervalo_max (painel desligado, sem conexao) fecha a faixa."""
+    faixas, inicio, anterior = [], None, None
+    for linha in linhas:
+        ts, ligada = linha[0], linha[coluna]
+        if inicio is not None and ts - anterior > intervalo_max:
+            faixas.append([inicio, anterior])
+            inicio = None
+        if ligada and inicio is None:
+            inicio = ts
+        elif not ligada and inicio is not None:
+            faixas.append([inicio, ts])
+            inicio = None
+        anterior = ts
+    if inicio is not None:
+        faixas.append([inicio, anterior])
+    return faixas
+
+
+@app.route("/api/tendencia")
+def api_tendencia():
+    """Grafico de tendencia do painel: topo e base dos dois estagios (sensores 0-3) no periodo
+    ?horas=H, mais as faixas em que cada resistencia ficou ligada."""
+    try:
+        horas = ler_periodo()
+    except ValueError:
+        return jsonify({"erro": "horas precisa ser numero"}), 400
+
+    desde = time.time() - horas * 3600
+    with abrir_banco() as con:
+        series = [
+            {"sensor": idx, "nome": SENSORES[idx]["nome"], "pontos": serie_agrupada(con, idx, desde, horas)}
+            for idx in range(4)
+        ]
+        saidas = con.execute(
+            "SELECT ts, resistencia_e1, resistencia_e2 FROM saidas WHERE ts >= ? ORDER BY ts", (desde,)
+        ).fetchall()
+
+    intervalo_max = INTERVALO_GRAVACAO_SEG * 3
+    return jsonify({
+        "horas": horas,
+        "agora": time.time(),
+        "intervalo_gravacao_seg": INTERVALO_GRAVACAO_SEG,
+        "series": series,
+        "aquecimento": [periodos_ligada(saidas, 1, intervalo_max), periodos_ligada(saidas, 2, intervalo_max)],
     })
 
 

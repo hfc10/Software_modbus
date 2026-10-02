@@ -13,12 +13,17 @@
     --panel-2: #182333;
     --line: #263547;
     --ink: #e7edf3;
-    --ink-dim: #8ea0b3;
+    --ink-dim: #a3b3c5;
     --accent: #ff8a3d;
     --accent-2: #3ddc97;
     --danger: #ff5d72;
     --silica-dry: #4fa8e8;
     --silica-wet: #e8709f;
+    /* series do grafico de tendencia, ordem fixa (validada pra daltonismo e contraste no fundo dos paineis) */
+    --serie-1: #3987e5;
+    --serie-2: #d95926;
+    --serie-3: #199e70;
+    --serie-4: #c98500;
     --font-display: 'Oxanium', 'Segoe UI', sans-serif;
     --font-body: 'IBM Plex Sans', 'Segoe UI', sans-serif;
     --font-mono: 'IBM Plex Mono', 'Consolas', monospace;
@@ -44,7 +49,7 @@
   .status-linha { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .pill {
     display: inline-flex; align-items: center; gap: 7px; padding: 7px 13px;
-    border-radius: 999px; font-size: 12.5px; font-weight: 600; border: 1px solid var(--line);
+    border-radius: 999px; font-size: 13px; font-weight: 600; border: 1px solid var(--line);
     background: var(--panel); transition: background .4s ease, border-color .4s ease, color .4s ease;
   }
   .pill .ponto { width: 7px; height: 7px; border-radius: 50%; background: var(--ink-dim); flex: none; }
@@ -59,18 +64,67 @@
     100% { box-shadow: 0 0 0 0 transparent; }
   }
 
+  /* ---------- barra de status (estado geral numa linha, legivel de longe) ---------- */
+  .barra-status {
+    display: flex; align-items: stretch; flex-wrap: wrap; margin-bottom: 18px; overflow: hidden;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+  }
+  .status-bloco {
+    display: flex; flex-direction: column; justify-content: center; gap: 3px;
+    padding: 12px 20px; border-right: 1px solid var(--line);
+  }
+  .status-bloco:last-child { border-right: none; }
+  /* textos da barra numa linha so; se a tela for estreita demais, a atividade termina em "..."
+     (texto inteiro no title) em vez de quebrar */
+  .status-bloco .status-valor, .status-bloco .status-detalhe, .status-bloco .status-rotulo { white-space: nowrap; }
+  .status-bloco.cresce { flex: 1 1 0; min-width: 0; }
+  .status-bloco.cresce .status-valor { display: block; overflow: hidden; text-overflow: ellipsis; }
+  .status-rotulo { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--ink-dim); }
+  .status-valor { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 700; }
+  .status-geral { min-width: 210px; transition: background .4s ease; }
+  .status-geral .status-valor { font-family: var(--font-display); font-size: 19px; letter-spacing: .6px; }
+  .status-geral .status-detalhe { font-size: 13px; font-weight: 500; color: var(--ink-dim); }
+  .status-geral.normal { background: color-mix(in srgb, var(--accent-2) 10%, var(--panel)); }
+  .status-geral.normal .status-valor { color: var(--accent-2); }
+  .status-geral.atencao { background: color-mix(in srgb, var(--danger) 14%, var(--panel)); }
+  .status-geral.atencao .status-valor { color: var(--danger); }
+  .status-geral.atencao.piscando { animation: piscarStatus 1.6s ease-in-out infinite; }
+  @keyframes piscarStatus { 50% { background: color-mix(in srgb, var(--danger) 30%, var(--panel)); } }
+  .status-modo.manual .status-valor { color: var(--accent); }
+  .status-relogio { align-items: flex-end; }
+  .status-relogio .status-valor { font-family: var(--font-mono); font-size: 21px; font-variant-numeric: tabular-nums; }
+  /* tela media (ex.: 1024): a atividade desce para uma linha propria, com a largura toda */
+  @media (min-width: 761px) and (max-width: 1150px) {
+    .status-bloco.cresce { order: 1; flex: 1 1 100%; border-right: none; border-top: 1px solid var(--line); }
+    .status-relogio { flex: 1 1 auto; }
+  }
+  @media (max-width: 760px) {
+    .status-bloco .status-valor, .status-bloco .status-detalhe { white-space: normal; }
+    .status-bloco.cresce .status-valor { overflow: visible; }
+    .status-bloco, .status-bloco.cresce { flex: 1 1 100%; border-right: none; border-bottom: 1px solid var(--line); }
+    .status-bloco:last-child { border-bottom: none; }
+    .status-relogio { align-items: flex-start; }
+  }
+  body.toque .status-rotulo { font-size: 12px; }
+  body.toque .status-valor { font-size: 18px; }
+  body.toque .status-geral .status-valor { font-size: 23px; }
+  body.toque .status-geral .status-detalhe { font-size: 14px; }
+  body.toque .status-relogio .status-valor { font-size: 25px; }
+
   .grade {
     display: grid; grid-template-columns: minmax(280px, 480px) 1fr; gap: 22px;
     align-items: start;
   }
   @media (max-width: 860px) { .grade { grid-template-columns: 1fr; } }
+  /* sem isso uma coluna do grid cresce ate o conteudo mais largo e vaza da tela no celular */
+  .grade > *, .inferior > * { min-width: 0; }
 
   .painel {
     background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
     padding: 20px; margin-bottom: 18px;
   }
   .painel-titulo {
-    font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.1px;
+    font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.1px;
     color: var(--ink-dim); margin: 0 0 14px;
   }
 
@@ -84,8 +138,8 @@
   .legenda-cor i { width: 13px; height: 13px; border-radius: 4px; display: inline-block; }
   /* etiquetas de leitura ao vivo dentro do desenho */
   .etiqueta-svg rect { fill: var(--panel); fill-opacity: .82; stroke: var(--line); stroke-width: 1; }
-  .etiqueta-svg text { font-family: var(--font-mono); font-size: 12px; font-weight: 600; fill: var(--ink); }
-  .etiqueta-svg .etq-nome { font-family: var(--font-body); font-size: 9px; font-weight: 700; letter-spacing: .6px; fill: var(--ink-dim); }
+  .etiqueta-svg text { font-family: var(--font-mono); font-size: 13px; font-weight: 600; fill: var(--ink); }
+  .etiqueta-svg .etq-nome { font-family: var(--font-body); font-size: 10px; font-weight: 700; letter-spacing: .6px; fill: var(--ink-dim); }
   .etiqueta-svg .etq-quente { fill: var(--accent); }
   .etiqueta-svg .etq-corte { fill: var(--danger); }
   .etiqueta-svg .etq-off { font-family: var(--font-body); font-style: italic; font-weight: 400; fill: var(--ink-dim); }
@@ -97,10 +151,10 @@
     background: var(--panel-2);
   }
   .estagio-card .cabecalho { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin-bottom: 8px; }
-  .estagio-card .nome { font-size: 13px; font-weight: 600; white-space: nowrap; }
+  .estagio-card .nome { font-size: 14px; font-weight: 600; white-space: nowrap; }
   .estagio-card .chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .estado-chip {
-    font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px;
+    font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px;
     padding: 3px 9px; border-radius: 999px; background: var(--panel); border: 1px solid var(--line);
     color: var(--ink-dim); white-space: nowrap;
   }
@@ -110,7 +164,7 @@
   .barra-saturacao > i { display: block; height: 100%; border-radius: 999px; transition: width 1.1s ease, background 1.1s ease; }
   /* umidade do topo e da base de cada estagio, com o marcador do limite do automatico */
   .medida + .medida { margin-top: 10px; }
-  .medida-cab { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 12px; color: var(--ink-dim); }
+  .medida-cab { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 13px; color: var(--ink-dim); }
   .medida-cab b { color: var(--ink); font-family: var(--font-mono); font-weight: 600; }
   .trilho-limite { position: relative; }
   .marca-limite {
@@ -118,22 +172,24 @@
     background: var(--ink); box-shadow: 0 0 0 2px var(--panel-2); transform: translateX(-50%);
     transition: left .6s ease;
   }
-  .medida-nota { font-size: 11px; color: var(--ink-dim); margin-top: 4px; min-height: 1em; }
+  .medida-nota { font-size: 12px; font-weight: 500; color: var(--ink-dim); margin-top: 4px; min-height: 1em; }
   .medida-nota.alerta { color: var(--accent); }
   .medida-nota.ok { color: var(--accent-2); }
+  .rotulo-resistencia { margin-top: 12px; }
   .toggle-botao.mini {
-    margin-top: 10px; width: 100%; justify-content: center; font-size: 11.5px; padding: 6px 10px;
+    width: 100%; justify-content: center; font-size: 12.5px; padding: 6px 10px;
   }
 
   .coluna-direita { display: flex; flex-direction: column; }
-  .linha-topo-direita { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-  @media (max-width: 760px) { .linha-topo-direita { grid-template-columns: 1fr; } }
+  /* 3 cartoes lado a lado; em tela estreita viram 2 (ou 1) em vez de espremer o texto */
+  .linha-topo-direita { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; }
+  body.toque .linha-topo-direita { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
 
   .tile-grande { display: flex; flex-direction: column; gap: 4px; }
-  .tile-grande .rotulo { font-size: 11.5px; color: var(--ink-dim); font-weight: 600; text-transform: uppercase; letter-spacing: .6px; }
+  .tile-grande .rotulo { font-size: 12.5px; color: var(--ink-dim); font-weight: 600; text-transform: uppercase; letter-spacing: .6px; }
   .tile-grande .valor { font-family: var(--font-display); font-size: 30px; font-weight: 700; line-height: 1.1; }
   .tile-grande .valor .unid { font-size: 15px; font-weight: 600; color: var(--ink-dim); margin-left: 3px; }
-  .tile-grande .nota { font-size: 11.5px; color: var(--ink-dim); }
+  .tile-grande .nota { font-size: 12.5px; font-weight: 500; color: var(--ink-dim); }
 
   .anel-progresso { position: relative; width: 78px; height: 78px; margin: 2px 0; }
   .anel-progresso svg { width: 100%; height: 100%; transform: rotate(-90deg); }
@@ -148,7 +204,7 @@
     align-items: center; justify-content: center;
   }
   .anel-valor .valor { font-family: var(--font-display); font-size: 17px; font-weight: 700; line-height: 1; }
-  .anel-valor .anel-unid { font-size: 9px; color: var(--ink-dim); margin-top: 2px; }
+  .anel-valor .anel-unid { font-size: 10.5px; color: var(--ink-dim); margin-top: 2px; }
 
   @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
   .skel {
@@ -161,7 +217,7 @@
 
   .toggle-botao {
     border: 1px solid var(--line); background: var(--panel-2); color: var(--ink);
-    font-family: var(--font-body); font-weight: 600; font-size: 12.5px;
+    font-family: var(--font-body); font-weight: 600; font-size: 13.5px;
     padding: 8px 14px; border-radius: 9px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
   }
   .toggle-botao.ligado { background: color-mix(in srgb, var(--accent-2) 16%, var(--panel-2)); color: var(--accent-2); border-color: color-mix(in srgb, var(--accent-2) 45%, var(--line)); }
@@ -176,7 +232,7 @@
     border: 2px solid currentColor; border-right-color: transparent; animation: girar .8s linear infinite;
   }
   /* bloqueado (automatico ou sem conexao): continua clicavel pra explicar o motivo */
-  .toggle-botao.bloqueado, .toggle-modo.bloqueado { opacity: .5; cursor: not-allowed; }
+  .toggle-botao.bloqueado, .toggle-modo.bloqueado { opacity: .72; cursor: not-allowed; }
   .toggle-botao.bloqueado::after, .toggle-modo.bloqueado::after {
     content: ''; flex: none; width: 12px; height: 12px; background: currentColor;
     -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M5 7V5a3 3 0 0 1 6 0v2h.5A1.5 1.5 0 0 1 13 8.5v5a1.5 1.5 0 0 1-1.5 1.5h-7A1.5 1.5 0 0 1 3 13.5v-5A1.5 1.5 0 0 1 4.5 7H5zm1.5 0h3V5a1.5 1.5 0 0 0-3 0v2z'/%3E%3C/svg%3E") center / contain no-repeat;
@@ -186,17 +242,17 @@
   /* ---------- controle: modo, ventoinha 2, limites ---------- */
   .controle-linha { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
   .controle-linha:last-of-type { margin-bottom: 0; }
-  .controle-rotulo { font-size: 12.5px; color: var(--ink-dim); font-weight: 600; }
+  .controle-rotulo { font-size: 14px; color: var(--ink-dim); font-weight: 600; }
   .toggle-modo {
     border: 1px solid var(--line); background: var(--panel-2); color: var(--ink-dim);
-    font-family: var(--font-body); font-weight: 700; font-size: 12.5px; text-transform: uppercase; letter-spacing: .4px;
+    font-family: var(--font-body); font-weight: 700; font-size: 13.5px; text-transform: uppercase; letter-spacing: .4px;
     padding: 8px 14px; border-radius: 9px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
   }
   .toggle-modo.manual { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); background: color-mix(in srgb, var(--accent) 14%, var(--panel-2)); }
   .toggle-modo .ponto { display: none; border-radius: 50%; }
-  .aviso-automatico { font-size: 11.5px; color: var(--ink-dim); margin-top: 2px; }
+  .aviso-automatico { font-size: 12.5px; font-weight: 500; color: var(--ink-dim); margin-top: 2px; }
   .ciclo-pendente-chip {
-    display: inline-flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 700;
+    display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 700;
     text-transform: uppercase; letter-spacing: .3px; padding: 3px 9px; border-radius: 999px;
     color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--line));
     background: color-mix(in srgb, var(--accent) 12%, var(--panel-2)); white-space: nowrap;
@@ -204,7 +260,7 @@
   .limites-form { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
   @media (max-width: 520px) { .limites-form { grid-template-columns: 1fr; } }
   .limite-campo { display: flex; flex-direction: column; gap: 4px; }
-  .limite-campo label { font-size: 11px; color: var(--ink-dim); font-weight: 600; white-space: nowrap; }
+  .limite-campo label { font-size: 12px; color: var(--ink-dim); font-weight: 600; white-space: nowrap; }
   .limite-campo input {
     background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; color: var(--ink);
     font-family: var(--font-mono); font-size: 14px; padding: 8px 10px; width: 100%;
@@ -213,59 +269,99 @@
   .limites-rodape { display: flex; align-items: center; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
   .botao-salvar {
     border: none; background: var(--accent); color: #1a1005; font-family: var(--font-body);
-    font-weight: 700; font-size: 12.5px; padding: 9px 16px; border-radius: 9px; cursor: pointer;
+    font-weight: 700; font-size: 13.5px; padding: 9px 16px; border-radius: 9px; cursor: pointer;
   }
   .botao-salvar:disabled { opacity: .5; cursor: not-allowed; }
-  .limites-status { font-size: 12px; color: var(--ink-dim); }
+  .limites-status { font-size: 13px; color: var(--ink-dim); }
   .limites-status.erro { color: var(--danger); }
   .limites-status.ok { color: var(--accent-2); }
   body.toque .toggle-modo { font-size: 15px; padding: 12px 18px; }
   body.toque .limite-campo input { font-size: 16px; padding: 11px 12px; }
   body.toque .botao-salvar { font-size: 14.5px; padding: 12px 18px; }
 
-  .alarmes-lista { display: flex; flex-wrap: wrap; gap: 8px; }
+  /* ---------- alarmes e eventos (faixa inferior, largura toda) ---------- */
+  .inferior { display: grid; grid-template-columns: minmax(300px, 1fr) 1.5fr; gap: 22px; align-items: start; }
+  @media (max-width: 860px) { .inferior { grid-template-columns: 1fr; } }
+  .subtitulo-secao { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 32px; margin-bottom: 10px; }
+  .subtitulo-secao h3 { margin: 0; font-size: 14.5px; font-weight: 700; color: var(--ink); }
+
+  .alarmes-lista { display: flex; flex-direction: column; gap: 8px; }
   .alarme-item {
-    display: flex; align-items: center; gap: 9px; padding: 8px 13px; border-radius: 999px;
+    /* sem espaco, o botao Reconhecer desce para a linha de baixo em vez de quebrar o texto */
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 13px; border-radius: 10px;
     border: 1px solid var(--line); font-size: 12.5px; background: var(--panel-2);
-    transition: background .3s ease, border-color .3s ease, padding .3s ease, border-radius .3s ease;
+    transition: background .3s ease, border-color .3s ease;
   }
   .alarme-item .faixa { width: 6px; height: 6px; border-radius: 50%; background: var(--accent-2); flex: none; }
-  .alarme-item .txt { flex: 1; }
-  .alarme-item .txt .t1 { font-weight: 500; font-size: 12.5px; color: var(--ink-dim); }
-  .alarme-item .txt .t2 { display: none; color: var(--ink-dim); font-size: 12px; margin-top: 2px; }
+  .alarme-item .txt { flex: 1 1 auto; }
+  .alarme-item .txt .t1 { font-weight: 600; font-size: 14px; color: var(--ink-dim); }
+  .alarme-item .txt .t2 { color: var(--ink-dim); font-size: 13px; margin-top: 2px; }
   .alarme-item.critico {
-    flex-basis: 100%; padding: 12px 14px; border-radius: 10px; gap: 11px;
+    padding: 12px 14px; gap: 11px;
     background: color-mix(in srgb, var(--danger) 14%, var(--panel-2));
     border-color: color-mix(in srgb, var(--danger) 55%, var(--line));
-    animation: pulsarAlarme 1.6s ease-in-out infinite;
   }
+  .alarme-item.critico:not(.reconhecido) { animation: pulsarAlarme 1.6s ease-in-out infinite; }
   .alarme-item.critico .faixa { width: 4px; height: auto; align-self: stretch; border-radius: 3px; background: var(--danger); }
   .alarme-item.critico .txt .t1 { color: var(--danger); font-weight: 700; font-size: 14px; }
-  .alarme-item.critico .txt .t2 { display: block; }
   @keyframes pulsarAlarme {
     0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--danger) 35%, transparent); }
     50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--danger) 0%, transparent); }
   }
+  .botao-reconhecer {
+    flex: none; border: 1px solid var(--danger); background: var(--danger); color: #1c0509;
+    font-family: var(--font-body); font-weight: 700; font-size: 13px; padding: 7px 12px;
+    border-radius: 8px; cursor: pointer;
+  }
+  .botao-reconhecer:disabled { opacity: .6; cursor: progress; }
+  .selo-reconhecido {
+    flex: none; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px;
+    color: var(--ink-dim); border: 1px solid var(--line); border-radius: 999px; padding: 3px 9px;
+  }
+  body.toque .botao-reconhecer { font-size: 15px; padding: 12px 16px; }
+  body.toque .alarme-item .txt .t2 { font-size: 13.5px; }
 
-  .resumo-ciclo { display: flex; flex-direction: column; gap: 12px; }
-  .resumo-estado {
-    display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 10px;
-    border: 1px solid color-mix(in srgb, var(--accent-2) 40%, var(--line));
-    background: color-mix(in srgb, var(--accent-2) 10%, var(--panel-2));
-    font-weight: 700; font-size: 14px; color: var(--accent-2); transition: all .3s ease;
+  /* ---------- tendencia do processo ---------- */
+  .tendencia-topo { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+  .tendencia-topo .painel-titulo { margin: 0; }
+  .tendencia-controles { display: flex; gap: 10px; flex-wrap: wrap; }
+  .seletor.compacto button { font-size: 13px; padding: 6px 12px; }
+  body.toque .seletor.compacto button { font-size: 14.5px; padding: 11px 16px; }
+  .legenda-tendencia { display: flex; flex-wrap: wrap; gap: 4px 18px; margin-bottom: 8px; }
+  .legenda-item {
+    display: inline-flex; align-items: center; gap: 7px; padding: 4px 2px; border: none; background: none;
+    font-family: var(--font-body); font-size: 14px; color: var(--ink); cursor: pointer;
   }
-  .resumo-estado .ponto { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-2); box-shadow: 0 0 6px var(--accent-2); flex: none; }
-  .resumo-estado.atencao {
-    color: var(--danger); border-color: color-mix(in srgb, var(--danger) 45%, var(--line));
-    background: color-mix(in srgb, var(--danger) 12%, var(--panel-2));
+  .legenda-item i { width: 16px; height: 3px; border-radius: 2px; flex: none; }
+  .legenda-item b { font-family: var(--font-mono); font-weight: 600; color: var(--ink-dim); font-variant-numeric: tabular-nums; }
+  .legenda-item.oculta { opacity: .45; text-decoration: line-through; }
+  .legenda-ajuda { font-size: 12.5px; color: var(--ink-dim); align-self: center; }
+  body.toque .legenda-item { font-size: 15px; padding: 8px 4px; }
+  .grafico-tendencia { position: relative; height: 330px; }
+  .grafico-tendencia canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: pan-y; }
+  body.toque .grafico-tendencia { height: 380px; }
+
+  /* ---------- ajustes e PIN ---------- */
+  .modal-caixa.caixa-ajustes { width: min(640px, 100%); }
+  .ajustes-secao + .ajustes-secao { margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--line); }
+  .ajustes-secao h3 { margin: 0 0 6px; font-size: 14px; }
+  .ajustes-texto { margin: 0 0 14px; font-size: 13.5px; line-height: 1.5; color: var(--ink-dim); }
+  .ajustes-texto code { font-family: var(--font-mono); color: var(--ink); }
+  body.toque .ajustes-texto { font-size: 15px; }
+  .modal-caixa.caixa-pin { width: min(340px, 100%); text-align: center; }
+  .caixa-pin h2 { margin: 0; font-family: var(--font-display); font-size: 20px; }
+  .pin-pontos { display: flex; justify-content: center; gap: 12px; min-height: 16px; margin: 16px 0 6px; }
+  .pin-pontos i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--ink-dim); }
+  .pin-pontos i.cheio { background: var(--ink); border-color: var(--ink); }
+  .pin-erro { min-height: 18px; font-size: 13px; color: var(--danger); }
+  .teclado-pin { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 8px 0 14px; }
+  .teclado-pin button {
+    height: 58px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel-2); color: var(--ink);
+    font-family: var(--font-mono); font-size: 21px; font-weight: 600; cursor: pointer;
   }
-  .resumo-estado.atencao .ponto { background: var(--danger); box-shadow: 0 0 6px var(--danger); }
-  .resumo-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .resumo-item {
-    border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; background: var(--panel-2);
-  }
-  .resumo-item .resumo-rotulo { font-size: 10.5px; color: var(--ink-dim); font-weight: 600; text-transform: uppercase; letter-spacing: .4px; }
-  .resumo-item .resumo-valor { display: block; margin-top: 4px; font-family: var(--font-mono); font-size: 16px; font-weight: 600; color: var(--ink); }
+  .teclado-pin button:active { background: var(--line); }
+  .teclado-pin .tecla-acao { font-family: var(--font-body); font-size: 14px; color: var(--ink-dim); }
+  .teclado-pin .tecla-ok { border: none; background: var(--accent); color: #1a1005; font-family: var(--font-body); font-size: 15px; font-weight: 700; }
 
   .sensores-grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
   .sensor-tile {
@@ -274,13 +370,13 @@
   }
   .sensor-tile.tipo-bmp { border-left-color: #a78bfa; }
   .sensor-tile.erro { border-left-color: var(--danger); }
-  .sensor-tile .nome { font-size: 11.5px; color: var(--ink-dim); font-weight: 600; text-transform: uppercase; letter-spacing: .4px; margin-bottom: 8px; }
+  .sensor-tile .nome { font-size: 12.5px; color: var(--ink-dim); font-weight: 600; text-transform: uppercase; letter-spacing: .4px; margin-bottom: 8px; }
   .sensor-tile .valor-principal {
     font-family: var(--font-mono); font-size: 26px; font-weight: 700; color: var(--ink); line-height: 1.15;
   }
   .sensor-tile .valor-principal.off { font-size: 15px; font-weight: 400; font-style: italic; color: var(--ink-dim); }
   .sensor-tile .linha { display: flex; justify-content: space-between; align-items: baseline; font-size: 14px; margin-top: 6px; }
-  .sensor-tile .linha .r { color: var(--ink-dim); font-size: 12px; }
+  .sensor-tile .linha .r { color: var(--ink-dim); font-size: 13.5px; font-weight: 500; }
   .sensor-tile .linha .v { font-family: var(--font-mono); font-weight: 600; font-size: 15px; }
   .sensor-tile .linha .v.off { color: var(--ink-dim); font-style: italic; font-weight: 400; font-size: 13px; }
   .sensor-tile .mini-graf { width: 100%; height: 34px; display: block; margin-top: 10px; }
@@ -298,7 +394,7 @@
     background: var(--ink); box-shadow: 0 0 0 2px var(--panel-2); transform: translateX(-50%);
     transition: left .6s ease;
   }
-  .termo-marcas { position: relative; height: 13px; margin-top: 5px; font-family: var(--font-mono); font-size: 10.5px; color: var(--ink-dim); }
+  .termo-marcas { position: relative; height: 13px; margin-top: 5px; font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-dim); }
   .termo-marcas span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
 
   .link-rodape { color: var(--ink-dim); text-decoration: underline; text-underline-offset: 3px; }
@@ -307,18 +403,18 @@
   [hidden] { display: none !important; }
 
   /* ---------- eventos recentes ---------- */
-  .eventos-lista { display: flex; flex-direction: column; max-height: 300px; overflow-y: auto; }
-  .evento { display: flex; align-items: baseline; gap: 10px; padding: 8px 2px; border-bottom: 1px solid var(--line); font-size: 12.5px; }
+  .eventos-lista { display: flex; flex-direction: column; max-height: 340px; overflow-y: auto; }
+  .evento { display: flex; align-items: baseline; gap: 10px; padding: 8px 2px; border-bottom: 1px solid var(--line); font-size: 14px; }
   .evento:last-child { border-bottom: none; }
   .evento .ponto { width: 7px; height: 7px; border-radius: 50%; background: var(--accent-2); flex: none; align-self: center; }
   .evento.aviso .ponto { background: var(--accent); }
   .evento.alarme .ponto { background: var(--danger); }
-  .evento .hora { font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-dim); flex: none; }
+  .evento .hora { font-family: var(--font-mono); font-size: 13px; color: var(--ink-dim); flex: none; }
   .evento .msg { flex: 1; }
   .evento.alarme .msg { color: var(--danger); font-weight: 600; }
-  .evento-vazio { font-size: 12.5px; color: var(--ink-dim); }
+  .evento-vazio { font-size: 14px; color: var(--ink-dim); }
   body.toque .evento { font-size: 14.5px; padding: 11px 2px; }
-  body.toque .evento .hora { font-size: 13px; }
+  body.toque .evento .hora { font-size: 14px; }
 
   /* ---------- grafico grande (clique num cartao de sensor) ---------- */
   .sensor-tile[data-idx] { cursor: pointer; transition: border-color .2s ease, transform .15s ease; }
@@ -344,14 +440,14 @@
   .modal-grafico { position: relative; height: 340px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel-2); }
   .modal-grafico canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
   .tooltip-grafico {
-    position: absolute; pointer-events: none; padding: 6px 10px; border-radius: 8px; font-size: 12px;
+    position: absolute; pointer-events: none; padding: 7px 11px; border-radius: 8px; font-size: 13px;
     background: var(--bg); border: 1px solid var(--line); white-space: nowrap; z-index: 2;
   }
   .modal-resumo { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 12px; font-size: 13px; color: var(--ink-dim); }
   .modal-resumo b { color: var(--ink); font-family: var(--font-mono); font-weight: 600; }
   body.toque .seletor button { font-size: 15px; padding: 13px 20px; }
   body.toque .modal-grafico { height: 400px; }
-  footer { margin-top: 20px; font-size: 11.5px; color: var(--ink-dim); display: flex; gap: 14px; flex-wrap: wrap; }
+  footer { margin-top: 20px; font-size: 13px; color: var(--ink-dim); display: flex; gap: 14px; flex-wrap: wrap; }
 
   @keyframes girar { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
   @keyframes fluirAr { to { stroke-dashoffset: -32; } }
@@ -379,11 +475,11 @@
   }
   .banner-icone { font-size: 20px; line-height: 1.3; flex: none; }
   .banner-titulo { font-weight: 700; font-size: 15px; color: var(--danger); }
-  .banner-corpo { font-size: 12.5px; color: var(--ink-dim); margin-top: 2px; }
+  .banner-corpo { font-size: 13.5px; color: var(--ink-dim); margin-top: 2px; }
   body.toque .banner-titulo { font-size: 18px; }
   body.toque .banner-corpo { font-size: 14.5px; }
   .toast .toast-titulo { font-weight: 700; color: var(--danger); }
-  .toast .toast-corpo { color: var(--ink-dim); font-size: 12px; margin-top: 2px; }
+  .toast .toast-corpo { color: var(--ink-dim); font-size: 13px; margin-top: 2px; }
   .toast.bloqueio { background: var(--panel-2); border-color: var(--ink-dim); }
   .toast.bloqueio .toast-titulo { color: var(--ink); }
   body.toque .toast { font-size: 15px; }
@@ -400,7 +496,7 @@
   @keyframes saiToast { to { transform: translateX(24px); opacity: 0; } }
   .ferramenta-botao {
     border: 1px solid var(--line); background: var(--panel); color: var(--ink-dim);
-    font-family: var(--font-body); font-weight: 600; font-size: 12.5px; cursor: pointer;
+    font-family: var(--font-body); font-weight: 600; font-size: 13px; cursor: pointer;
     padding: 7px 13px; border-radius: 999px; transition: color .2s ease, border-color .2s ease;
   }
   .ferramenta-botao:hover, .ferramenta-botao.ativo { color: var(--ink); border-color: var(--ink-dim); }
@@ -419,6 +515,7 @@
   body.toque .processo svg { max-width: 360px; }
   body.toque .tile-grande .rotulo { font-size: 13px; }
   body.toque .tile-grande .valor { font-size: 38px; }
+  body.toque .tile-grande .anel-valor .valor { font-size: 18px; }  /* tem que caber dentro do anel */
   body.toque .tile-grande .nota { font-size: 13px; }
   body.toque .alarme-item { font-size: 15px; padding: 12px 18px; }
   body.toque .alarme-item .txt .t1 { font-size: 15px; }
@@ -428,9 +525,6 @@
   body.toque .sensor-tile .linha .v { font-size: 17px; }
   body.toque .termo-marcas { font-size: 12px; }
   body.toque .legenda-cor { font-size: 17px; }
-  body.toque .resumo-estado { font-size: 16px; }
-  body.toque .resumo-item .resumo-valor { font-size: 19px; }
-  body.toque .resumo-item .resumo-rotulo { font-size: 12px; }
 
   @media (prefers-reduced-motion: reduce) {
     * { animation-duration: .001ms !important; transition-duration: .2s !important; }
@@ -485,10 +579,31 @@
     <div class="status-linha">
       <span class="pill" id="pillConexao"><span class="ponto"></span><span id="pillConexaoTxt">lendo Modbus...</span></span>
       <span class="pill" id="pillAtualizado">&#9200; <span id="pillAtualizadoTxt">--</span></span>
+      <button class="ferramenta-botao" id="botaoAjustes" type="button">Ajustes</button>
       <button class="ferramenta-botao" id="botaoToque" type="button">Modo toque</button>
       <button class="ferramenta-botao" id="botaoTelaCheia" type="button">Tela cheia</button>
     </div>
   </header>
+
+  <div class="barra-status" role="status">
+    <div class="status-bloco status-geral" id="statusGeral">
+      <span class="status-rotulo">Estado geral</span>
+      <span class="status-valor"><span id="statusGeralIcone" aria-hidden="true">&#8230;</span><span id="statusGeralTxt">--</span></span>
+      <span class="status-detalhe" id="statusGeralDetalhe">aguardando leitura</span>
+    </div>
+    <div class="status-bloco status-modo" id="statusModo">
+      <span class="status-rotulo">Modo</span>
+      <span class="status-valor" id="statusModoTxt">--</span>
+    </div>
+    <div class="status-bloco cresce">
+      <span class="status-rotulo">Atividade</span>
+      <span class="status-valor" id="statusAtividade">--</span>
+    </div>
+    <div class="status-bloco status-relogio">
+      <span class="status-rotulo" id="statusData">--</span>
+      <span class="status-valor" id="statusHora">--:--:--</span>
+    </div>
+  </div>
 
   <div class="banner-conexao" id="bannerConexao" hidden>
     <span class="banner-icone">&#9888;&#65039;</span>
@@ -542,19 +657,19 @@
             <ellipse cx="150" cy="406" rx="75" ry="14" fill="var(--panel-2)" stroke="var(--line)" stroke-width="2"/>
 
             <g class="etiqueta-svg">
-              <rect x="82" y="26" width="136" height="22" rx="6"/>
+              <rect x="79" y="26" width="142" height="22" rx="6"/>
               <text x="150" y="41" text-anchor="middle"><tspan class="etq-nome">TOPO</tspan><tspan id="svgE2TopoT" dx="6">--</tspan><tspan id="svgE2TopoU" dx="5"></tspan></text>
             </g>
             <g class="etiqueta-svg">
-              <rect x="82" y="136" width="136" height="22" rx="6"/>
+              <rect x="79" y="136" width="142" height="22" rx="6"/>
               <text x="150" y="151" text-anchor="middle"><tspan class="etq-nome">BASE</tspan><tspan id="svgE2BaseT" dx="6">--</tspan><tspan id="svgE2BaseU" dx="5"></tspan></text>
             </g>
             <g class="etiqueta-svg">
-              <rect x="82" y="226" width="136" height="22" rx="6"/>
+              <rect x="79" y="226" width="142" height="22" rx="6"/>
               <text x="150" y="241" text-anchor="middle"><tspan class="etq-nome">TOPO</tspan><tspan id="svgE1TopoT" dx="6">--</tspan><tspan id="svgE1TopoU" dx="5"></tspan></text>
             </g>
             <g class="etiqueta-svg">
-              <rect x="82" y="354" width="136" height="22" rx="6"/>
+              <rect x="79" y="354" width="142" height="22" rx="6"/>
               <text x="150" y="369" text-anchor="middle"><tspan class="etq-nome">BASE</tspan><tspan id="svgE1BaseT" dx="6">--</tspan><tspan id="svgE1BaseU" dx="5"></tspan></text>
             </g>
 
@@ -586,6 +701,7 @@
               </div>
               <div class="medida-nota" id="notaBaseE1"></div>
             </div>
+            <div class="medida-cab rotulo-resistencia"><span>Resistencia</span></div>
             <button class="toggle-botao mini" id="botaoResistE1" type="button"><span class="ponto"></span><span class="rotulo-botao">--</span></button>
           </div>
           <div class="estagio-card">
@@ -606,6 +722,7 @@
               </div>
               <div class="medida-nota" id="notaBaseE2"></div>
             </div>
+            <div class="medida-cab rotulo-resistencia"><span>Resistencia</span></div>
             <button class="toggle-botao mini" id="botaoResistE2" type="button"><span class="ponto"></span><span class="rotulo-botao">--</span></button>
           </div>
         </div>
@@ -625,50 +742,6 @@
           <button class="toggle-botao" id="botaoVentoinha2" type="button"><span class="ponto"></span><span class="rotulo-botao">--</span></button>
         </div>
       </div>
-
-      <div class="painel">
-        <div class="painel-titulo">Limites do controle automatico</div>
-        <div class="limites-form">
-          <div class="limite-campo">
-            <label for="campoLimiteLigar">Umidade topo - ligar (%)</label>
-            <input type="number" id="campoLimiteLigar" min="0" max="100" step="0.1">
-          </div>
-          <div class="limite-campo">
-            <label for="campoLimiteDesligar">Umidade base - desligar (%)</label>
-            <input type="number" id="campoLimiteDesligar" min="0" max="100" step="0.1">
-          </div>
-          <div class="limite-campo">
-            <label for="campoTempMaxima">Temp. maxima do manual (C)</label>
-            <input type="number" id="campoTempMaxima" min="0" max="125" step="0.1">
-          </div>
-        </div>
-        <div class="limites-rodape">
-          <button class="botao-salvar" id="botaoSalvarLimites" type="button">Salvar limites</button>
-          <span class="limites-status" id="limitesStatus"></span>
-        </div>
-      </div>
-
-      <div class="painel">
-        <div class="painel-titulo">Resumo do ciclo</div>
-        <div class="resumo-ciclo">
-          <div class="resumo-estado" id="resumoEstado"><span class="ponto"></span><span id="resumoEstadoTxt">--</span></div>
-          <div class="resumo-stats">
-            <div class="resumo-item">
-              <span class="resumo-rotulo">Ciclos restantes</span>
-              <span class="resumo-valor num" id="resumoCiclosRestantes">--</span>
-            </div>
-            <div class="resumo-item">
-              <span class="resumo-rotulo">Estagio ativo</span>
-              <span class="resumo-valor" id="resumoEstagioAtivo">--</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="painel">
-        <div class="painel-titulo">Eventos recentes</div>
-        <div class="eventos-lista" id="listaEventos"><div class="evento-vazio">Nenhum evento ainda</div></div>
-      </div>
     </div>
 
     <!-- ==================== coluna direita ==================== -->
@@ -687,7 +760,7 @@
                 <span class="anel-unid">/ 5000</span>
               </div>
             </div>
-            <span class="nota">regeneracoes desde a instalacao</span>
+            <span class="nota" id="notaCiclos">regeneracoes desde a instalacao</span>
           </div>
           <div class="tile-grande">
             <span class="rotulo">Temperatura ambiente</span>
@@ -702,16 +775,24 @@
       </div>
 
       <div class="painel">
-        <div class="painel-titulo">Alarmes</div>
-        <div class="alarmes-lista">
-          <div class="alarme-item ok" id="alarmeFalha">
-            <div class="faixa"></div>
-            <div class="txt"><div class="t1">Falha de funcionamento</div><div class="t2" id="alarmeFalhaTxt">nenhuma falha registrada</div></div>
+        <div class="tendencia-topo">
+          <div class="painel-titulo">Tendencia do processo</div>
+          <div class="tendencia-controles">
+            <div class="seletor compacto" id="seletorTendMetrica">
+              <button type="button" data-metrica="v2" class="ativo">Umidade</button>
+              <button type="button" data-metrica="v1">Temperatura</button>
+            </div>
+            <div class="seletor compacto" id="seletorTendPeriodo">
+              <button type="button" data-horas="1" class="ativo">1 h</button>
+              <button type="button" data-horas="6">6 h</button>
+              <button type="button" data-horas="24">24 h</button>
+            </div>
           </div>
-          <div class="alarme-item ok" id="alarmeSaturacao">
-            <div class="faixa"></div>
-            <div class="txt"><div class="t1">Saturacao / fim de vida da silica</div><div class="t2" id="alarmeSaturacaoTxt">dentro do limite de ciclos</div></div>
-          </div>
+        </div>
+        <div class="legenda-tendencia" id="legendaTendencia"></div>
+        <div class="grafico-tendencia">
+          <canvas id="canvasTendencia" aria-label="Grafico de tendencia do topo e da base dos dois estagios"></canvas>
+          <div class="tooltip-grafico" id="tooltipTendencia" hidden></div>
         </div>
       </div>
 
@@ -722,10 +803,94 @@
     </div>
   </div>
 
+  <!-- ==================== faixa inferior: alarmes e eventos ==================== -->
+  <div class="painel">
+    <div class="painel-titulo">Alarmes e eventos</div>
+    <div class="inferior">
+      <div>
+        <div class="subtitulo-secao"><h3>Alarmes</h3></div>
+        <div class="alarmes-lista">
+          <div class="alarme-item ok" id="alarmeFalha">
+            <div class="faixa"></div>
+            <div class="txt"><div class="t1">Falha de funcionamento</div><div class="t2" id="alarmeFalhaTxt">nenhuma falha registrada</div></div>
+            <span class="alarme-acao" id="alarmeFalhaAcao"></span>
+          </div>
+          <div class="alarme-item ok" id="alarmeSaturacao">
+            <div class="faixa"></div>
+            <div class="txt"><div class="t1">Saturacao / fim de vida da silica</div><div class="t2" id="alarmeSaturacaoTxt">dentro do limite de ciclos</div></div>
+            <span class="alarme-acao" id="alarmeSaturacaoAcao"></span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="subtitulo-secao">
+          <h3>Eventos recentes</h3>
+          <div class="seletor compacto" id="seletorEventos">
+            <button type="button" data-filtro="todos" class="ativo">Todos</button>
+            <button type="button" data-filtro="alertas">Alarmes e avisos</button>
+          </div>
+        </div>
+        <div class="eventos-lista" id="listaEventos"><div class="evento-vazio">Nenhum evento ainda</div></div>
+      </div>
+    </div>
+  </div>
+
   <footer>
     <span id="rodapeStatus">aguardando primeira leitura...</span>
     <a class="link-rodape" href="/api/exportar.csv?horas=24">Exportar leituras (CSV, 24 h)</a>
   </footer>
+</div>
+
+<!-- ==================== ajustes (fora da tela de operacao) ==================== -->
+<div class="modal" id="modalAjustes" hidden>
+  <div class="modal-caixa caixa-ajustes" role="dialog" aria-modal="true" aria-labelledby="ajustesTitulo">
+    <div class="modal-topo">
+      <h2 id="ajustesTitulo">Ajustes</h2>
+      <button class="ferramenta-botao" id="ajustesFechar" type="button">Fechar</button>
+    </div>
+    <div class="ajustes-secao">
+      <h3>Limites do controle automatico</h3>
+      <p class="ajustes-texto">Gravados no ESP32. O ESP recusa valores invalidos e mantem os anteriores.</p>
+      <div class="limites-form">
+        <div class="limite-campo">
+          <label for="campoLimiteLigar">Umidade topo - ligar (%)</label>
+          <input type="number" id="campoLimiteLigar" min="0" max="100" step="0.1">
+        </div>
+        <div class="limite-campo">
+          <label for="campoLimiteDesligar">Umidade base - desligar (%)</label>
+          <input type="number" id="campoLimiteDesligar" min="0" max="100" step="0.1">
+        </div>
+        <div class="limite-campo">
+          <label for="campoTempMaxima">Temp. maxima do manual (C)</label>
+          <input type="number" id="campoTempMaxima" min="0" max="125" step="0.1">
+        </div>
+      </div>
+      <div class="limites-rodape">
+        <button class="botao-salvar" id="botaoSalvarLimites" type="button">Salvar limites</button>
+        <span class="limites-status" id="limitesStatus"></span>
+      </div>
+    </div>
+    <div class="ajustes-secao">
+      <h3>Acesso</h3>
+      <p class="ajustes-texto" id="ajustesPinTexto">--</p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PIN (teclado na tela, pra IHM sem teclado fisico) ==================== -->
+<div class="modal" id="modalPin" hidden>
+  <div class="modal-caixa caixa-pin" role="dialog" aria-modal="true" aria-labelledby="pinTitulo">
+    <h2 id="pinTitulo">Digite o PIN</h2>
+    <div class="pin-pontos" id="pinPontos" aria-live="polite"></div>
+    <div class="pin-erro" id="pinErro"></div>
+    <div class="teclado-pin" id="tecladoPin">
+      <button type="button" data-tecla="1">1</button><button type="button" data-tecla="2">2</button><button type="button" data-tecla="3">3</button>
+      <button type="button" data-tecla="4">4</button><button type="button" data-tecla="5">5</button><button type="button" data-tecla="6">6</button>
+      <button type="button" data-tecla="7">7</button><button type="button" data-tecla="8">8</button><button type="button" data-tecla="9">9</button>
+      <button type="button" data-tecla="apagar" class="tecla-acao">Apagar</button><button type="button" data-tecla="0">0</button><button type="button" data-tecla="ok" class="tecla-ok">OK</button>
+    </div>
+    <button class="ferramenta-botao" id="pinCancelar" type="button">Cancelar</button>
+  </div>
 </div>
 
 <script>
@@ -991,16 +1156,6 @@
       ? 'Manual: os botoes de resistencia, ventoinha 1 e ventoinha 2 comandam as saidas direto.'
       : 'No automatico o ESP decide sozinho; os botoes abaixo ficam bloqueados.';
 
-    if (d.limites) {
-      // nao sobrescreve um campo enquanto o operador esta digitando nele
-      var campoLigar = document.getElementById('campoLimiteLigar');
-      var campoDesligar = document.getElementById('campoLimiteDesligar');
-      var campoTemp = document.getElementById('campoTempMaxima');
-      if (document.activeElement !== campoLigar) campoLigar.value = d.limites.ligar;
-      if (document.activeElement !== campoDesligar) campoDesligar.value = d.limites.desligar;
-      if (document.activeElement !== campoTemp) campoTemp.value = d.limites.temp;
-    }
-
     if (ambiente && ambiente.ok) {
       animarValor('valorAmbiente', ambiente.valor1, function (v) { return v.toFixed(1) + '<span class="unid">&deg;C</span>'; });
       document.getElementById('valorPressao').textContent = 'BMP180 · ' + ambiente.valor2.toFixed(0) + ' hPa';
@@ -1017,35 +1172,26 @@
     var anel = document.getElementById('anelCiclos');
     anel.style.strokeDashoffset = (263.9 * (1 - pctCiclos)).toFixed(1);
     anel.style.stroke = pctCiclos < 0.7 ? 'var(--accent-2)' : (pctCiclos < 0.9 ? 'var(--accent)' : 'var(--danger)');
+    document.getElementById('notaCiclos').textContent = d.ciclosSilica != null
+      ? Math.max(0, 5000 - ciclos) + ' restantes ate o limite'
+      : 'regeneracoes desde a instalacao';
 
-    var alarmeFalha = document.getElementById('alarmeFalha');
-    alarmeFalha.className = 'alarme-item ' + (d.alarmeFalha ? 'critico' : 'ok');
-    document.getElementById('alarmeFalhaTxt').textContent = d.alarmeFalha
-      ? 'algum sensor nao respondeu na ultima leitura'
-      : 'nenhuma falha registrada';
+    var reconhecidos = d.alarmesReconhecidos || {};
+    renderizarAlarme('Falha', 'falha', !!d.alarmeFalha, !!reconhecidos.falha,
+      'algum sensor nao respondeu na ultima leitura', 'nenhuma falha registrada');
+    renderizarAlarme('Saturacao', 'saturacao', !!d.alarmeSaturacao, !!reconhecidos.saturacao,
+      'silica-gel proxima do fim de vida util', 'dentro do limite de ciclos');
     if (ultimoAlarmeFalha === false && d.alarmeFalha === true) {
       mostrarToast('Falha de funcionamento', 'Algum sensor nao respondeu na ultima leitura.');
     }
     ultimoAlarmeFalha = !!d.alarmeFalha;
-
-    var alarmeSaturacao = document.getElementById('alarmeSaturacao');
-    alarmeSaturacao.className = 'alarme-item ' + (d.alarmeSaturacao ? 'critico' : 'ok');
-    document.getElementById('alarmeSaturacaoTxt').textContent = d.alarmeSaturacao
-      ? 'silica-gel proxima do fim de vida util'
-      : 'dentro do limite de ciclos';
     if (ultimoAlarmeSaturacao === false && d.alarmeSaturacao === true) {
       mostrarToast('Silica-gel saturada', 'Numero de ciclos atingiu o limite recomendado.');
     }
     ultimoAlarmeSaturacao = !!d.alarmeSaturacao;
 
-    var emAtencao = !!(d.alarmeFalha || d.alarmeSaturacao);
-    var resumoEstado = document.getElementById('resumoEstado');
-    resumoEstado.className = 'resumo-estado' + (emAtencao ? ' atencao' : '');
-    document.getElementById('resumoEstadoTxt').textContent = emAtencao ? 'Atencao necessaria' : 'Normal';
-    document.getElementById('resumoCiclosRestantes').textContent = Math.max(0, 5000 - ciclos);
-    document.getElementById('resumoEstagioAtivo').textContent =
-      d.resistenciaE1 ? 'Estagio 1' : (d.resistenciaE2 ? 'Estagio 2' : 'Nenhum');
-
+    renderizarStatus(d);
+    atualizarLegendaTendencia(d);
     renderizarEventos(d.eventos || []);
 
     var grade = document.getElementById('grade-sensores');
@@ -1096,6 +1242,501 @@
     }
   }
 
+  // ---------- barra de status ----------
+  var NOMES_ALARME = { falha: 'Falha de funcionamento', saturacao: 'Silica no fim da vida util' };
+
+  function renderizarStatus(d) {
+    var reconhecidos = d.alarmesReconhecidos || {};
+    var ativos = [], naoReconhecido = false;
+    [['falha', d.alarmeFalha], ['saturacao', d.alarmeSaturacao]].forEach(function (par) {
+      if (!par[1]) return;
+      ativos.push(NOMES_ALARME[par[0]]);
+      if (!reconhecidos[par[0]]) naoReconhecido = true;
+    });
+
+    // o estado sempre vai com icone + texto, nunca so a cor
+    var estado, icone, detalhe, classe;
+    if (!d.conectado) {
+      estado = 'SEM COMUNICACAO'; icone = '✕'; classe = 'atencao';
+      detalhe = 'o ESP32 nao responde pelo RS-485';
+    } else if (ativos.length) {
+      estado = 'ALARME'; icone = '⚠'; classe = 'atencao' + (naoReconhecido ? ' piscando' : '');
+      // curto pra caber numa linha: com dois alarmes os nomes ficam na lista de alarmes
+      detalhe = (ativos.length > 1 ? ativos.length + ' alarmes ativos' : ativos[0]) +
+        (naoReconhecido ? ' - nao reconhecido' : ' - reconhecido');
+    } else {
+      estado = 'NORMAL'; icone = '✓'; classe = 'normal';
+      detalhe = 'sem alarmes ativos';
+    }
+    document.getElementById('statusGeral').className = 'status-bloco status-geral ' + classe;
+    document.getElementById('statusGeralIcone').textContent = icone;
+    document.getElementById('statusGeralTxt').textContent = estado;
+    document.getElementById('statusGeralDetalhe').textContent = detalhe;
+
+    document.getElementById('statusModo').className = 'status-bloco status-modo' + (d.modoManual ? ' manual' : '');
+    document.getElementById('statusModoTxt').textContent = d.modoManual ? 'MANUAL' : 'AUTOMATICO';
+
+    var desde = d.desdeSeg || [null, null];
+    var ciclosPendentes = d.cicloIncompleto || [false, false];
+    function ha(i) { return desde[i] != null ? ' ha ' + formatarDuracao(desde[i]) : ''; }
+    var atividade;
+    if (!d.conectado) atividade = 'Sem dados do ESP32';
+    else if (d.resistenciaE1 && d.resistenciaE2) atividade = 'Estagios 1 e 2 aquecendo';
+    else if (d.resistenciaE1) atividade = 'Estagio 1 regenerando' + ha(0);
+    else if (d.resistenciaE2) atividade = 'Estagio 2 regenerando' + ha(1);
+    else if (ciclosPendentes[0] || ciclosPendentes[1]) {
+      atividade = 'Ciclo pendente no Estagio ' + (ciclosPendentes[0] ? 1 : 2) + ', esperando esfriar';
+    } else atividade = 'Em espera, nenhum estagio aquecendo';
+    var elAtividade = document.getElementById('statusAtividade');
+    elAtividade.textContent = atividade;
+    elAtividade.title = atividade;
+  }
+
+  function atualizarRelogio() {
+    var agora = new Date();
+    document.getElementById('statusHora').textContent = agora.toLocaleTimeString('pt-BR');
+    document.getElementById('statusData').textContent =
+      agora.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
+  }
+
+  // ---------- alarmes (com reconhecimento) ----------
+  function renderizarAlarme(sufixo, chave, ativo, reconhecido, textoAtivo, textoOk) {
+    document.getElementById('alarme' + sufixo).className = 'alarme-item ' + (ativo ? 'critico' : 'ok') +
+      (ativo && reconhecido ? ' reconhecido' : '');
+    document.getElementById('alarme' + sufixo + 'Txt').textContent = ativo ? textoAtivo : textoOk;
+    var acao = document.getElementById('alarme' + sufixo + 'Acao');
+    var desejado = !ativo ? '' : (reconhecido ? 'selo' : 'botao');
+    if (acao.dataset.estado === desejado) return;  // nao recria o botao a cada leitura (perderia o toque)
+    acao.dataset.estado = desejado;
+    acao.innerHTML = desejado === 'botao'
+      ? '<button class="botao-reconhecer" type="button" data-alarme="' + chave + '">Reconhecer</button>'
+      : (desejado === 'selo' ? '<span class="selo-reconhecido">reconhecido</span>' : '');
+  }
+
+  document.querySelector('.alarmes-lista').addEventListener('click', async function (e) {
+    var botao = e.target.closest('button[data-alarme]');
+    if (!botao) return;
+    botao.disabled = true;
+    try {
+      var r = await fetchComTimeout('/api/alarmes/reconhecer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ alarme: botao.getAttribute('data-alarme') }),
+      }, 5000);
+      if (!r.ok) {
+        var resposta = await r.json().catch(function () { return {}; });
+        throw new Error(resposta.erro || 'o servidor respondeu com erro ' + r.status);
+      }
+    } catch (e2) {
+      botao.disabled = false;
+      mostrarToast('Alarme nao reconhecido', e2.name === 'AbortError' ? 'O servidor do painel nao respondeu a tempo.' : e2.message);
+    }
+    atualizar();
+  });
+
+  // ---------- PIN (opcional: config.json "pin_ajustes") ----------
+  var PIN_VALIDADE_MS = 5 * 60 * 1000;  // depois de acertar, nao pede de novo por 5 min de uso
+  var modalPin = document.getElementById('modalPin');
+  var pinSessao = null;  // { valor, ate }
+  var pinDigitado = '';
+  var resolverPin = null;
+
+  function pinAtivo() { return !!(ultimosDados && ultimosDados.pinAtivo); }
+
+  function cabecalhosComPin() {
+    var cabecalhos = { 'Content-Type': 'application/json' };
+    if (pinSessao) cabecalhos['X-Pin'] = pinSessao.valor;
+    return cabecalhos;
+  }
+
+  // Resolve true quando pode seguir: sem PIN configurado, PIN ainda valido ou digitado agora.
+  function liberarComPin(titulo) {
+    if (!pinAtivo()) return Promise.resolve(true);
+    if (pinSessao && Date.now() < pinSessao.ate) {
+      pinSessao.ate = Date.now() + PIN_VALIDADE_MS;
+      return Promise.resolve(true);
+    }
+    pinSessao = null;
+    pinDigitado = '';
+    desenharPin();
+    document.getElementById('pinErro').textContent = '';
+    document.getElementById('pinTitulo').textContent = titulo;
+    modalPin.hidden = false;
+    return new Promise(function (resolver) { resolverPin = resolver; });
+  }
+
+  function fecharPin(liberado) {
+    if (!resolverPin) return;
+    modalPin.hidden = true;
+    resolverPin(liberado);
+    resolverPin = null;
+  }
+
+  function desenharPin() {
+    document.getElementById('pinPontos').innerHTML = new Array(pinDigitado.length + 1).join('<i class="cheio"></i>');
+  }
+
+  async function conferirPin() {
+    if (!pinDigitado) return;
+    var erro = document.getElementById('pinErro');
+    erro.textContent = 'Conferindo...';
+    try {
+      var r = await fetchComTimeout('/api/pin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin: pinDigitado }),
+      }, 5000);
+      if (r.ok) {
+        pinSessao = { valor: pinDigitado, ate: Date.now() + PIN_VALIDADE_MS };
+        erro.textContent = '';
+        fecharPin(true);
+        return;
+      }
+      erro.textContent = 'PIN incorreto';
+    } catch (e) {
+      erro.textContent = 'Sem conexao com o servidor do painel';
+    }
+    pinDigitado = '';
+    desenharPin();
+  }
+
+  function teclaPin(tecla) {
+    if (tecla === 'ok') { conferirPin(); return; }
+    if (tecla === 'apagar') pinDigitado = pinDigitado.slice(0, -1);
+    else if (pinDigitado.length < 8) pinDigitado += tecla;
+    document.getElementById('pinErro').textContent = '';
+    desenharPin();
+  }
+
+  document.getElementById('tecladoPin').addEventListener('click', function (e) {
+    var botao = e.target.closest('button[data-tecla]');
+    if (botao) teclaPin(botao.getAttribute('data-tecla'));
+  });
+  document.getElementById('pinCancelar').addEventListener('click', function () { fecharPin(false); });
+  modalPin.addEventListener('click', function (e) { if (e.target === modalPin) fecharPin(false); });
+  // registrado antes dos outros atalhos: com o PIN aberto, o teclado so fala com ele
+  document.addEventListener('keydown', function (e) {
+    if (modalPin.hidden) return;
+    if (/^[0-9]$/.test(e.key)) teclaPin(e.key);
+    else if (e.key === 'Backspace') teclaPin('apagar');
+    else if (e.key === 'Enter') teclaPin('ok');
+    else if (e.key === 'Escape') fecharPin(false);
+    else return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+  });
+
+  // ---------- ajustes ----------
+  var modalAjustes = document.getElementById('modalAjustes');
+
+  function preencherLimites() {
+    var lim = ultimosDados && ultimosDados.limites;
+    if (!lim) return;
+    document.getElementById('campoLimiteLigar').value = lim.ligar;
+    document.getElementById('campoLimiteDesligar').value = lim.desligar;
+    document.getElementById('campoTempMaxima').value = lim.temp;
+  }
+
+  async function abrirAjustes() {
+    if (!(await liberarComPin('PIN para abrir os ajustes'))) return;
+    // os campos so sao preenchidos ao abrir: a leitura a cada 2 s nao apaga o que esta sendo digitado
+    preencherLimites();
+    document.getElementById('ajustesPinTexto').innerHTML = pinAtivo()
+      ? 'Trocar o modo e gravar limites pede PIN (vale por 5 min depois de digitado). Para mudar o PIN, ' +
+        'edite <code>pin_ajustes</code> no config.json e reinicie o painel.'
+      : 'Sem PIN: qualquer pessoa na tela pode trocar o modo e os limites. Para proteger, coloque um PIN ' +
+        'numerico em <code>pin_ajustes</code> no config.json e reinicie o painel.';
+    modalAjustes.hidden = false;
+  }
+
+  document.getElementById('botaoAjustes').addEventListener('click', abrirAjustes);
+  document.getElementById('ajustesFechar').addEventListener('click', function () { modalAjustes.hidden = true; });
+  modalAjustes.addEventListener('click', function (e) { if (e.target === modalAjustes) modalAjustes.hidden = true; });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !modalAjustes.hidden) modalAjustes.hidden = true;
+  });
+
+  // ---------- tendencia do processo (grafico fixo na tela) ----------
+  // Mesma ordem dos sensores 0-3 no backend; a cor segue a serie, nunca a posicao na tela.
+  var SERIES_TENDENCIA = [
+    { rotulo: 'E1 topo', cor: '--serie-1' },
+    { rotulo: 'E1 base', cor: '--serie-2' },
+    { rotulo: 'E2 topo', cor: '--serie-3' },
+    { rotulo: 'E2 base', cor: '--serie-4' },
+  ];
+  var tendencia = { metrica: 'v2', horas: 1, dados: null, ocultas: {}, mouseX: null, temporizadorToque: null };
+  var canvasTend = document.getElementById('canvasTendencia');
+  var tooltipTend = document.getElementById('tooltipTendencia');
+  var legendaTend = document.getElementById('legendaTendencia');
+
+  legendaTend.innerHTML = SERIES_TENDENCIA.map(function (s, i) {
+    return '<button class="legenda-item" type="button" data-serie="' + i + '" title="Mostrar/ocultar">' +
+      '<i style="background:var(' + s.cor + ')"></i>' + s.rotulo + ' <b id="legendaValor' + i + '">--</b></button>';
+  }).join('') +
+    '<span class="legenda-item" style="cursor:default"><i style="background:var(--accent);height:8px"></i>resistencia ligada</span>' +
+    '<span class="legenda-ajuda">toque na legenda para ocultar uma curva</span>';
+
+  function formatarMetrica(v, metrica) {
+    return metrica === 'v1' ? v.toFixed(1) + '°C' : v.toFixed(0) + '%';
+  }
+
+  function atualizarLegendaTendencia(d) {
+    var sensores = d.sensores || [];
+    SERIES_TENDENCIA.forEach(function (_, i) {
+      var s = sensores[i];
+      document.getElementById('legendaValor' + i).textContent = s && s.ok
+        ? formatarMetrica(tendencia.metrica === 'v1' ? s.valor1 : s.valor2, tendencia.metrica) : '--';
+    });
+  }
+
+  function referenciasTendencia(metrica) {
+    if (metrica === 'v1') {
+      return [
+        { v: TEMP_DESLIGAR, rotulo: 'corte ' + TEMP_DESLIGAR + '°C (topo)' },
+        { v: TEMP_RELIGAR, rotulo: 'religa ' + TEMP_RELIGAR + '°C (topo)' },
+      ];
+    }
+    if (!limitesAtuais) return [];
+    return [
+      { v: limitesAtuais.ligar, rotulo: 'liga ' + formatarLimite(limitesAtuais.ligar) + '% (topo)' },
+      { v: limitesAtuais.desligar, rotulo: 'desliga ' + formatarLimite(limitesAtuais.desligar) + '% (base)' },
+    ];
+  }
+
+  function desenharTendencia() {
+    var dpr = window.devicePixelRatio || 1;
+    var w = canvasTend.clientWidth, h = canvasTend.clientHeight;
+    if (!w || !h) return;
+    canvasTend.width = Math.round(w * dpr);
+    canvasTend.height = Math.round(h * dpr);
+    var ctx = canvasTend.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+
+    var estilo = getComputedStyle(document.documentElement);
+    function cor(nome) { return estilo.getPropertyValue(nome).trim(); }
+    ctx.font = '12.5px "IBM Plex Mono", Consolas, monospace';
+    ctx.textBaseline = 'alphabetic';
+
+    var dados = tendencia.dados;
+    if (!dados) {
+      ctx.fillStyle = cor('--ink-dim'); ctx.textAlign = 'center';
+      ctx.fillText('Carregando historico...', w / 2, h / 2);
+      return;
+    }
+
+    var metrica = tendencia.metrica;
+    var visiveis = [];
+    dados.series.forEach(function (s, i) { if (!tendencia.ocultas[i] && SERIES_TENDENCIA[i]) visiveis.push({ i: i, pontos: s.pontos }); });
+    var valores = [];
+    visiveis.forEach(function (s) { s.pontos.forEach(function (p) { valores.push(p[metrica]); }); });
+    var refs = referenciasTendencia(metrica);
+
+    // faixa do grafico, depois as duas linhas das resistencias, depois os horarios
+    var margem = { e: 50, d: 78, t: 10, b: 64 };
+    var largura = w - margem.e - margem.d, altura = h - margem.t - margem.b;
+    var fim = dados.agora, inicio = fim - dados.horas * 3600;
+    function px(ts) { return margem.e + (ts - inicio) / (fim - inicio) * largura; }
+
+    if (!valores.length) {
+      ctx.fillStyle = cor('--ink-dim'); ctx.textAlign = 'center';
+      ctx.fillText(visiveis.length ? 'Sem leituras nesse periodo ainda' : 'Todas as curvas ocultas',
+        margem.e + largura / 2, margem.t + altura / 2);
+    }
+
+    var todos = valores.concat(refs.map(function (r) { return r.v; }));
+    var min = todos.length ? Math.min.apply(null, todos) : 0;
+    var max = todos.length ? Math.max.apply(null, todos) : 100;
+    if (max - min < 1) { min -= 0.5; max += 0.5; }
+    var folga = (max - min) * 0.08;
+    min -= folga; max += folga;
+    if (metrica === 'v2') { min = Math.max(0, min); max = Math.min(100, max); }
+    function py(v) { return margem.t + (1 - (v - min) / (max - min)) * altura; }
+
+    // grade (linhas solidas e discretas) e eixo y
+    ctx.strokeStyle = cor('--line'); ctx.lineWidth = 1; ctx.fillStyle = cor('--ink-dim'); ctx.textAlign = 'right';
+    for (var k = 0; k <= 4; k++) {
+      var yy = Math.round(margem.t + altura * k / 4) + 0.5;
+      ctx.beginPath(); ctx.moveTo(margem.e, yy); ctx.lineTo(margem.e + largura, yy); ctx.stroke();
+      var valorEixo = max - (max - min) * k / 4;
+      ctx.fillText(valorEixo.toFixed(metrica === 'v1' && max - min < 10 ? 1 : 0) + (metrica === 'v1' ? '°' : '%'), margem.e - 8, yy + 4);
+    }
+
+    // limites do controle (tracejado = limiar, nao grade)
+    ctx.strokeStyle = cor('--ink-dim'); ctx.lineWidth = 1; ctx.setLineDash([5, 5]);
+    refs.forEach(function (ref) {
+      if (ref.v < min || ref.v > max) return;
+      var yRef = Math.round(py(ref.v)) + 0.5;
+      ctx.beginPath(); ctx.moveTo(margem.e, yRef); ctx.lineTo(margem.e + largura, yRef); ctx.stroke();
+    });
+    ctx.setLineDash([]);
+
+    // curvas (quebram onde ficou um buraco sem leituras)
+    var limiteBuraco = Math.max(dados.horas * 3600 / 240, dados.intervalo_gravacao_seg) * 3;
+    var finais = [];
+    visiveis.forEach(function (s) {
+      if (!s.pontos.length) return;
+      ctx.strokeStyle = cor(SERIES_TENDENCIA[s.i].cor); ctx.lineWidth = 2; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+      ctx.beginPath();
+      s.pontos.forEach(function (p, k) {
+        var x = px(p.ts), y = py(p[metrica]);
+        if (k === 0 || p.ts - s.pontos[k - 1].ts > limiteBuraco) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+      var ultimo = s.pontos[s.pontos.length - 1];
+      finais.push({ i: s.i, y: py(ultimo[metrica]) });
+    });
+
+    // rotulos dos limites, por cima das curvas, com fundo
+    ctx.textAlign = 'left';
+    refs.forEach(function (ref) {
+      if (ref.v < min || ref.v > max) return;
+      var yRef = py(ref.v);
+      var yTexto = yRef - 5 < margem.t + 10 ? yRef + 14 : yRef - 5;
+      var larg = ctx.measureText(ref.rotulo).width;
+      ctx.fillStyle = cor('--panel'); ctx.fillRect(margem.e + 4, yTexto - 11, larg + 8, 15);
+      ctx.fillStyle = cor('--ink-dim'); ctx.fillText(ref.rotulo, margem.e + 8, yTexto);
+    });
+
+    // rotulo direto no fim de cada curva (afastados pra nao encavalar)
+    finais.sort(function (a, b) { return a.y - b.y; });
+    for (var f = 1; f < finais.length; f++) finais[f].y = Math.max(finais[f].y, finais[f - 1].y + 14);
+    var excesso = finais.length ? finais[finais.length - 1].y - (margem.t + altura) : 0;
+    if (excesso > 0) finais.forEach(function (fi) { fi.y -= excesso; });
+    finais.forEach(function (fi) {
+      var x0 = margem.e + largura + 6;
+      ctx.strokeStyle = cor(SERIES_TENDENCIA[fi.i].cor); ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(x0, fi.y); ctx.lineTo(x0 + 8, fi.y); ctx.stroke();
+      ctx.fillStyle = cor('--ink'); ctx.fillText(SERIES_TENDENCIA[fi.i].rotulo, x0 + 12, fi.y + 4);
+    });
+
+    // linhas das resistencias (faixas em que cada estagio aqueceu)
+    var yFaixa0 = margem.t + altura + 15;
+    var aquecimento = dados.aquecimento || [[], []];
+    [0, 1].forEach(function (e) {
+      var y = yFaixa0 + e * 13;
+      ctx.fillStyle = cor('--panel-2'); ctx.fillRect(margem.e, y, largura, 9);
+      ctx.fillStyle = cor('--accent');
+      (aquecimento[e] || []).forEach(function (faixa) {
+        var x1 = px(Math.max(faixa[0], inicio)), x2 = px(Math.min(faixa[1], fim));
+        if (x2 < margem.e) return;
+        ctx.fillRect(x1, y, Math.max(2, x2 - x1), 9);
+      });
+      ctx.fillStyle = cor('--ink-dim'); ctx.textAlign = 'right';
+      ctx.fillText('R' + (e + 1), margem.e - 8, y + 8);
+    });
+
+    // horarios
+    ctx.fillStyle = cor('--ink-dim');
+    for (var j = 0; j <= 4; j++) {
+      var ts = inicio + (fim - inicio) * j / 4;
+      ctx.textAlign = j === 0 ? 'left' : (j === 4 ? 'right' : 'center');
+      ctx.fillText(rotuloTempo(ts, dados.horas), px(ts), h - 6);
+    }
+
+    desenharCursorTendencia(ctx, { px: px, py: py, margem: margem, largura: largura, altura: altura,
+      inicio: inicio, fim: fim, visiveis: visiveis, aquecimento: aquecimento, cor: cor, w: w });
+  }
+
+  // cruz + pontos + dica com o valor de cada curva no instante sob o mouse/dedo
+  function desenharCursorTendencia(ctx, g) {
+    var mx = tendencia.mouseX;
+    if (mx == null || mx < g.margem.e || mx > g.margem.e + g.largura || !g.visiveis.length) {
+      tooltipTend.hidden = true;
+      return;
+    }
+    var ts = g.inicio + (mx - g.margem.e) / g.largura * (g.fim - g.inicio);
+    var metrica = tendencia.metrica;
+    var linhas = [], xCursor = null;
+    g.visiveis.forEach(function (s) {
+      var mais = null, menor = Infinity;
+      s.pontos.forEach(function (p) {
+        var dist = Math.abs(p.ts - ts);
+        if (dist < menor) { menor = dist; mais = p; }
+      });
+      if (!mais || menor > (g.fim - g.inicio) / 40) return;  // longe demais: buraco nos dados
+      if (xCursor == null) xCursor = g.px(mais.ts);
+      linhas.push({ i: s.i, p: mais });
+    });
+    if (!linhas.length) { tooltipTend.hidden = true; return; }
+
+    ctx.strokeStyle = g.cor('--ink-dim'); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(Math.round(xCursor) + 0.5, g.margem.t); ctx.lineTo(Math.round(xCursor) + 0.5, g.margem.t + g.altura); ctx.stroke();
+    linhas.forEach(function (l) {
+      ctx.fillStyle = g.cor(SERIES_TENDENCIA[l.i].cor); ctx.strokeStyle = g.cor('--panel'); ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(g.px(l.p.ts), g.py(l.p[metrica]), 4.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    });
+
+    var aquecendo = [0, 1].filter(function (e) {
+      return (g.aquecimento[e] || []).some(function (f) { return ts >= f[0] && ts <= f[1]; });
+    }).map(function (e) { return 'E' + (e + 1); });
+    tooltipTend.innerHTML = '<div style="color:var(--ink-dim);margin-bottom:3px">' + formatarDataHora(linhas[0].p.ts, true) + '</div>' +
+      linhas.map(function (l) {
+        return '<div><i style="display:inline-block;width:10px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px;background:var(' +
+          SERIES_TENDENCIA[l.i].cor + ')"></i>' + SERIES_TENDENCIA[l.i].rotulo + ' <b>' + formatarMetrica(l.p[metrica], metrica) + '</b></div>';
+      }).join('') +
+      '<div style="color:var(--ink-dim);margin-top:3px">' + (aquecendo.length ? 'aquecendo: ' + aquecendo.join(', ') : 'nenhuma resistencia ligada') + '</div>';
+    tooltipTend.hidden = false;
+    var esquerda = xCursor + 14;
+    if (esquerda + tooltipTend.offsetWidth > g.w) esquerda = xCursor - 14 - tooltipTend.offsetWidth;
+    tooltipTend.style.left = Math.max(4, esquerda) + 'px';
+    tooltipTend.style.top = (g.margem.t + 6) + 'px';
+  }
+
+  async function carregarTendencia() {
+    try {
+      var r = await fetchComTimeout('/api/tendencia?horas=' + tendencia.horas, {}, 8000);
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      tendencia.dados = await r.json();
+    } catch (e) {
+      // mantem o ultimo desenho; tenta de novo no proximo ciclo
+    }
+    desenharTendencia();
+  }
+
+  document.getElementById('seletorTendMetrica').addEventListener('click', function (e) {
+    var botao = e.target.closest('button[data-metrica]');
+    if (!botao) return;
+    tendencia.metrica = botao.getAttribute('data-metrica');
+    marcarAtivo(this, botao);
+    if (ultimosDados) atualizarLegendaTendencia(ultimosDados);
+    desenharTendencia();
+  });
+  document.getElementById('seletorTendPeriodo').addEventListener('click', function (e) {
+    var botao = e.target.closest('button[data-horas]');
+    if (!botao) return;
+    tendencia.horas = parseFloat(botao.getAttribute('data-horas'));
+    marcarAtivo(this, botao);
+    carregarTendencia();
+  });
+  legendaTend.addEventListener('click', function (e) {
+    var item = e.target.closest('button[data-serie]');
+    if (!item) return;
+    var i = item.getAttribute('data-serie');
+    tendencia.ocultas[i] = !tendencia.ocultas[i];
+    item.classList.toggle('oculta', tendencia.ocultas[i]);
+    desenharTendencia();
+  });
+
+  function posicaoTendencia(evento) {
+    var ponto = evento.touches ? evento.touches[0] : evento;
+    return ponto.clientX - canvasTend.getBoundingClientRect().left;
+  }
+  canvasTend.addEventListener('mousemove', function (e) { tendencia.mouseX = posicaoTendencia(e); desenharTendencia(); });
+  canvasTend.addEventListener('mouseleave', function () { tendencia.mouseX = null; desenharTendencia(); });
+  ['touchstart', 'touchmove'].forEach(function (tipo) {
+    canvasTend.addEventListener(tipo, function (e) {
+      clearTimeout(tendencia.temporizadorToque);
+      tendencia.mouseX = posicaoTendencia(e);
+      desenharTendencia();
+    }, { passive: true });
+  });
+  canvasTend.addEventListener('touchend', function () {
+    // no toque a dica fica um pouco na tela depois de soltar o dedo
+    tendencia.temporizadorToque = setTimeout(function () { tendencia.mouseX = null; desenharTendencia(); }, 2500);
+  });
+  if (window.ResizeObserver) new ResizeObserver(function () { desenharTendencia(); }).observe(canvasTend);
+
   // ---------- comandos: botao "enviando" ate a leitura do ESP confirmar, bloqueio com motivo ----------
   var COMANDOS = {
     botaoVentoinha: { rotulo: 'Ventoinha 1', url: '/api/ventoinha', textos: ['Ligada', 'Desligada'],
@@ -1103,13 +1744,13 @@
     botaoVentoinha2: { rotulo: 'Ventoinha 2', url: '/api/ventoinha', textos: ['Ligada', 'Desligada'],
       corpo: function (ligar) { return { ligar: ligar, id: 2 }; } },
     botaoResistE1: { rotulo: 'Resistencia do Estagio 1', url: '/api/resistencia', estagio: 1,
-      textos: ['Resistencia ligada', 'Resistencia desligada'],
+      textos: ['Ligada', 'Desligada'],
       corpo: function (ligar) { return { estagio: 1, ligar: ligar }; } },
     botaoResistE2: { rotulo: 'Resistencia do Estagio 2', url: '/api/resistencia', estagio: 2,
-      textos: ['Resistencia ligada', 'Resistencia desligada'],
+      textos: ['Ligada', 'Desligada'],
       corpo: function (ligar) { return { estagio: 2, ligar: ligar }; } },
     botaoModo: { rotulo: 'Modo de operacao', url: '/api/modo', textos: ['Manual', 'Automatico'], enviando: 'Mudando...',
-      corpo: function (manual) { return { manual: manual }; } },
+      protegido: true, corpo: function (manual) { return { manual: manual }; } },
   };
   var ESPERA_CONFIRMACAO_MS = 8000;  // leitura a cada 2 s: sobra folga pra porta serial lenta
   var estadoSaidas = {};  // id do botao -> ligado na ultima leitura
@@ -1159,10 +1800,11 @@
     try {
       var r = await fetchComTimeout(cmd.url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: cabecalhosComPin(),
         body: JSON.stringify(cmd.corpo(ligar)),
       }, 5000);
       if (!r.ok) {
+        if (r.status === 401) pinSessao = null;  // PIN mudou no servidor: pede de novo na proxima
         var resposta = await r.json().catch(function () { return {}; });
         throw new Error(resposta.erro || 'o servidor respondeu com erro ' + r.status);
       }
@@ -1191,6 +1833,7 @@
         var confirmado = await confirmar('Ligar a resistencia do Estagio ' + cmd.estagio + '?', texto, 'Ligar resistencia');
         if (!confirmado) return;
       }
+      if (cmd.protegido && !(await liberarComPin('PIN para trocar o modo'))) return;
       enviarComando(id, ligar);
     });
   });
@@ -1231,16 +1874,18 @@
       status.className = 'limites-status erro';
       return;
     }
+    if (!(await liberarComPin('PIN para gravar os limites'))) return;
     botao.disabled = true;
     status.textContent = 'Salvando...';
     status.className = 'limites-status';
     try {
       var r = await fetchComTimeout('/api/limites', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: cabecalhosComPin(),
         body: JSON.stringify({ ligar: ligar, desligar: desligar, temp: temp }),
       }, 4000);
       var resposta = await r.json();
+      if (r.status === 401) pinSessao = null;
       if (!r.ok) throw new Error(resposta.erro || 'erro ao salvar');
       status.textContent = 'Salvo.';
       status.className = 'limites-status ok';
@@ -1269,15 +1914,20 @@
   }
 
   var assinaturaEventos = null;
+  var filtroEventos = 'todos';  // 'todos' ou 'alertas' (so alarmes e avisos)
   function renderizarEventos(eventos) {
-    // so redesenha quando chegou evento novo (evita resetar a rolagem da lista a cada leitura)
-    var assinatura = eventos.length + ':' + (eventos.length ? eventos[0].ts : 0);
+    // so redesenha quando chegou evento novo ou mudou o filtro (evita resetar a rolagem a cada leitura)
+    var assinatura = filtroEventos + ':' + eventos.length + ':' + (eventos.length ? eventos[0].ts : 0);
     if (assinatura === assinaturaEventos) return;
     assinaturaEventos = assinatura;
 
+    if (filtroEventos === 'alertas') {
+      eventos = eventos.filter(function (e) { return e.tipo === 'alarme' || e.tipo === 'aviso'; });
+    }
     var lista = document.getElementById('listaEventos');
     if (!eventos.length) {
-      lista.innerHTML = '<div class="evento-vazio">Nenhum evento ainda</div>';
+      lista.innerHTML = '<div class="evento-vazio">' +
+        (filtroEventos === 'alertas' ? 'Nenhum alarme ou aviso recente' : 'Nenhum evento ainda') + '</div>';
       return;
     }
     var hoje = new Date().toDateString();
@@ -1341,7 +1991,7 @@
     var m = descreverMetrica(dados, grafico.metrica);
     var pontos = dados.pontos;
     grafico.pontosTela = [];
-    ctx.font = '11.5px "IBM Plex Mono", Consolas, monospace';
+    ctx.font = '12.5px "IBM Plex Mono", Consolas, monospace';
 
     if (!pontos.length) {
       ctx.fillStyle = corTexto;
@@ -1580,8 +2230,20 @@
   if (/[?&]quiosque=1/.test(location.search)) toqueSalvo = true;
   if (toqueSalvo) aplicarModoToque(true);
 
+  document.getElementById('seletorEventos').addEventListener('click', function (e) {
+    var botao = e.target.closest('button[data-filtro]');
+    if (!botao) return;
+    filtroEventos = botao.getAttribute('data-filtro');
+    marcarAtivo(this, botao);
+    renderizarEventos(ultimosDados ? ultimosDados.eventos || [] : []);
+  });
+
+  atualizarRelogio();
+  setInterval(atualizarRelogio, 1000);
   atualizar();
   setInterval(atualizar, 2000);
+  carregarTendencia();
+  setInterval(carregarTendencia, 10000);
 })();
 </script>
 </body>

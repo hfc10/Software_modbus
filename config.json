@@ -5,5 +5,6 @@
   "porta_http": 5000,
   "intervalo_leitura_seg": 2,
   "intervalo_gravacao_seg": 10,
-  "retencao_dias": 30
+  "retencao_dias": 30,
+  "pin_ajustes": ""
 }

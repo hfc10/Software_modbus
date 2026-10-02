@@ -14,27 +14,43 @@ Firmware do ESP32: [hfc10/ProjetoWifiSecador2026](https://github.com/hfc10/Proje
 
 ## O que o painel mostra
 
+A tela segue a divisão usual de IHM: **o que está acontecendo agora** em cima (barra de status,
+processo, tendência, sensores), **o que aconteceu** embaixo (alarmes e eventos) e **ajustes**
+fora da tela de operação.
+
+- **Barra de status:** estado geral (NORMAL, ALARME ou SEM COMUNICAÇÃO, sempre com ícone e
+  texto), modo (automático/manual), o que o secador está fazendo ("Estágio 1 regenerando há
+  4 min", "Ciclo pendente no Estágio 2, aguardando esfriar") e relógio. Pisca enquanto houver
+  alarme não reconhecido.
 - **Processo:** desenho do tubo com os dois estágios, a saturação da sílica de cada um, a
   resistência acesa quando aquece e a ventoinha girando. A temperatura e a umidade do topo e da
   base aparecem dentro do próprio desenho (a temperatura do topo fica laranja acima de 70 °C e
   vermelha a partir de 85 °C).
 - **Estágios:** umidade do topo e da base com o marcador do limite do automático em cada barra
   ("liga acima de 55%", "desliga abaixo de 8%"), estado ("aquecendo ha 4min", "ocioso ha 1h05"),
-  aviso de **ciclo pendente** e botão da resistência.
-- **Controle:** troca entre automático e manual, Ventoinha 2 e os limites de controle
-  (umidade para ligar, umidade para desligar, temperatura máxima do manual), gravados no ESP.
-  No automático (ou sem conexão) os botões de saída ficam com cadeado; tocar neles explica o
-  motivo.
+  aviso de **ciclo pendente** e botão da resistência (Ligada/Desligada).
+- **Controle:** troca entre automático e manual e Ventoinha 2. No automático (ou sem conexão)
+  os botões de saída ficam com cadeado; tocar neles explica o motivo.
 - **Comandos:** o botão mostra "Ligando..." até a leitura do ESP confirmar a mudança. Se o
   comando falhar ou o ESP não confirmar em 8 s, aparece um aviso com o motivo. Ligar uma
   resistência no manual pede confirmação.
+- **Tendência do processo:** gráfico fixo com a umidade (ou a temperatura) do topo e da base dos
+  dois estágios em 1 h, 6 h ou 24 h, com as linhas dos limites do controle e, embaixo, as faixas
+  em que cada resistência ficou ligada (R1, R2). Passar o mouse ou o dedo mostra os valores
+  daquele instante; tocar na legenda oculta uma curva.
 - **Sensores:** um cartão por sensor com valor atual e mini-gráfico. Clicar abre o **gráfico
   grande** com o histórico de 1 h, 6 h, 24 h ou 7 dias, com linhas tracejadas nos limites que o
   controle usa para aquele sensor (corte 85 °C / religa 70 °C no topo, limites de umidade).
-- **Alarmes:** falha de funcionamento e sílica no fim da vida útil, com aviso na tela.
-- **Ciclos da sílica:** contador de regenerações concluídas.
-- **Eventos recentes:** resistência ligou/desligou, troca de modo, mudança de limites, alarmes,
-  sensor sem leitura e conexão perdida, gravados com data e hora.
+- **Ciclos da sílica:** contador de regenerações concluídas e quantas faltam até o limite.
+- **Alarmes e eventos:** falha de funcionamento e sílica no fim da vida útil, com botão
+  **Reconhecer** (o alarme para de piscar e o reconhecimento vira evento; se o alarme
+  normalizar e voltar, pisca de novo). Ao lado, os eventos recentes (resistência ligou/desligou,
+  troca de modo, mudança de limites, alarmes, sensor sem leitura, conexão perdida), com filtro
+  "Alarmes e avisos".
+- **Ajustes** (botão no topo): limites do controle automático (umidade para ligar, umidade para
+  desligar, temperatura máxima do manual), gravados no ESP. Com `pin_ajustes` no `config.json`,
+  abrir os ajustes, gravar limites e trocar o modo pedem o PIN num teclado na tela; depois de
+  acertar, o PIN vale por 5 min.
 - **Conexão perdida:** faixa vermelha no topo quando o ESP para de responder.
 
 ---
@@ -94,6 +110,7 @@ Todos os campos são opcionais; o que faltar usa o padrão.
 | `intervalo_leitura_seg` | `2` | De quanto em quanto tempo lê o ESP |
 | `intervalo_gravacao_seg` | `10` | De quanto em quanto tempo grava o histórico em disco |
 | `retencao_dias` | `30` | Quantos dias de histórico manter |
+| `pin_ajustes` | `""` | PIN numérico para ajustes e troca de modo, ex.: `"1234"` (vazio = sem PIN) |
 
 ---
 
@@ -106,6 +123,10 @@ Todos os campos são opcionais; o que faltar usa o padrão.
   `porta_http`, ajuste a porta dentro do arquivo.
 - **Modo toque:** botões e textos maiores, para tela de toque a distância. Liga pelo botão no
   topo ou abrindo `http://localhost:5000/?quiosque=1`.
+- **Tamanho de tela:** o layout foi conferido de 1024 a 1920 px de largura, no modo normal e
+  no toque, sem texto quebrando linha ou passando da borda. Em telas médias (~1024 px) a
+  "Atividade" da barra de status desce para uma linha própria e os cartões do topo direito
+  passam para 2 colunas; abaixo de ~760 px tudo vira uma coluna só.
 - O servidor de produção (**waitress**) é usado automaticamente. Sem ele, o painel cai para o
   servidor de desenvolvimento do Flask.
 - Se o ESP parar de responder por 3 leituras seguidas, a porta serial é fechada e reaberta
@@ -117,7 +138,8 @@ Todos os campos são opcionais; o que faltar usa o padrão.
 
 - As leituras vão para **`historico.db`** (SQLite, ao lado do `app.py`) e ficam
   `retencao_dias` dias. Os mini-gráficos continuam depois de reiniciar o painel.
-- Os eventos ficam no mesmo banco.
+- Os eventos ficam no mesmo banco, e também o estado das saídas (resistências e ventoinha) a
+  cada gravação, que alimenta as faixas R1/R2 do gráfico de tendência.
 - **Exportar CSV:** link no rodapé do painel (últimas 24 h), ou
   `http://localhost:5000/api/exportar.csv?horas=N`.
 
@@ -130,14 +152,19 @@ outros sistemas:
 |---|---|
 | `GET /api/dados` | Estado completo em JSON (sensores, saídas, modo, limites, alarmes, eventos) |
 | `GET /api/historico?sensor=N&horas=H` | Série de um sensor para o gráfico grande |
+| `GET /api/tendencia?horas=H` | Topo e base dos dois estágios + períodos de resistência ligada |
 | `GET /api/exportar.csv?horas=H` | Leituras em CSV |
-| `POST /api/modo` | `{"manual": true}` |
+| `POST /api/modo` | `{"manual": true}` (pede PIN, se configurado) |
 | `POST /api/ventoinha` | `{"ligar": true}`; com `"id": 2` comanda a Ventoinha 2 |
 | `POST /api/resistencia` | `{"estagio": 1, "ligar": true}` |
-| `POST /api/limites` | `{"ligar": 55, "desligar": 8, "temp": 50}` |
+| `POST /api/limites` | `{"ligar": 55, "desligar": 8, "temp": 50}` (pede PIN, se configurado) |
+| `POST /api/alarmes/reconhecer` | `{"alarme": "falha"}` ou `{"alarme": "saturacao"}` |
+| `POST /api/pin` | `{"pin": "1234"}`: só confere o PIN |
 
 Comandos de saída só têm efeito com o ESP em modo manual. Os `POST` devolvem `{"ok": true}`,
-ou HTTP 502 com `{"erro": "..."}` quando o ESP recusa o comando ou não responde.
+ou HTTP 502 com `{"erro": "..."}` quando o ESP recusa o comando ou não responde. Com
+`pin_ajustes` configurado, `/api/modo` e `/api/limites` exigem o cabeçalho `X-Pin` e devolvem
+401 sem ele.
 
 ---
 
